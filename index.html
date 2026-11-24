@@ -344,6 +344,18 @@ button.danger:hover:not(:disabled){background:#ad3943}
 
 .game-panel{left:auto;right:18px;width:min(740px,calc(100% - 36px))}
 @media(max-width:660px){.game-panel{right:8px;width:calc(100% - 16px)}}
+
+.landing-brief .brief-metrics{grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.landing-brief .brief-metrics div{background:#fff9ea;border-color:#c6d5e4;padding:8px}
+.landing-brief .brief-metrics small,.landing-brief th small{font-size:.86em;color:#3f5578;font-weight:400}
+.brief-table{overflow-x:auto}
+.landing-brief details>summary{list-style-position:inside;border-top:1px solid #a8c1dc;margin-top:5px}
+.landing-brief tbody tr:nth-child(even):not(.landed-deed){background:#f5f9feaa}
+.brief-totals{margin:8px 0 2px}
+.brief-totals:empty{display:none}
+.brief-totals div{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:4px 2px}
+.brief-totals dd{margin:0;font-weight:800;white-space:nowrap}
+.landing-brief .brief-note{color:#3f5578;font-size:.9em}
 </style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><output id="rollResult"></output><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun paneli</button><div class="camera"><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><button id="myDeeds" class="primary">Tapularım</button><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
 <script>
 'use strict';
@@ -1259,31 +1271,34 @@ function renderLandingBrief(){
     if(property.owner<0)return 'Banka';
     return esc(S.players[property.owner].name)+(property.mort?' · ipotekli':'');
   };
+
+  const rentFor=projected=>projected===null?'Zar toplamı × '+(total>1?'10':'4'):money(projected);
   const rows=boardSet.map((id,i)=>
     '<tr'+(id===landingTile?' class="landed-deed"':'')+'><th scope="row">'+esc(B[id].name)+'</th>'+
-    '<td>'+money(B[id].price)+'</td><td>'+ownerLabel(id)+'</td>'+
-    '<td>'+(allRents[i]===null?'Zar × '+(total>1?'10':'4'):money(allRents[i]))+'</td></tr>'
+    '<td>'+money(B[id].price)+'</td><td>'+ownerLabel(id)+'</td><td>'+rentFor(allRents[i])+'</td></tr>'
   ).join('');
-  const fullRent=allRents[0]===null?'Zar × '+(total>1?'10':'4'):money(allRents.reduce((sum,rent)=>sum+rent,0));
-  const rentText=allRents[0]===null
-    ? 'Tam grup kira çarpanı: '+(total>1?'10':'4')+' × zar toplamı.'
-    : 'Her tapuya bir kez uğranırsa toplam '+money(allRents.reduce((sum,rent)=>sum+rent,0))+' kira.';
+  const tileRent=rentFor(allRents[boardSet.indexOf(landingTile)]);
+  const visitsTotal=allRents[0]===null?null:allRents.reduce((sum,rent)=>sum+rent,0);
+  const rentFootnote=B[landingTile].type==='land'
+    ?'Hesap, binalar yokken ve ipotekler kaldırıldığında geçerli.'
+    :'Hesap, tapular ipoteksizken geçerli.';
+  const visitRow=visitsTotal===null?'':'<div><dt>'+total+' tapuya birer kez uğranırsa</dt><dd>'+money(visitsTotal)+'</dd></div>';
+  const bankRow=bankCount?'<div><dt>Bankadaki '+bankCount+' tapunun toplam alış fiyatı</dt><dd>'+money(bankTotal)+'</dd></div>':'';
   const wasOpen=panel.dataset.index===String(landingTile)&&panel.querySelector('details')?.open;
   panel.dataset.index=String(landingTile);
   panel.style.setProperty('--district',stripe(B[landingTile]));
   panel.innerHTML='<div class="brief-heading"><h2>'+esc(B[landingTile].name)+'</h2><span>'+title+'</span></div>'+
     '<dl class="brief-metrics"><div><dt>'+valueLabel+'</dt><dd>'+value+'</dd></div>'+
-    '<div><dt>'+esc(current().name)+' · tapu</dt><dd>'+owned+'/'+total+'</dd></div>'+
-    '<div><dt>Tam grup kirası</dt><dd>'+fullRent+'</dd></div></dl>'+
+    '<div><dt>Bölgede '+esc(current().name)+'</dt><dd>'+owned+' / '+total+' tapu</dd></div>'+
+    '<div><dt>Bölge tamamlanırsa</dt><dd>'+tileRent+'</dd><small>Bu tapuya tek inişte</small></div></dl>'+
     (rivals.length?'<p class="brief-rivals">'+(seat>=0&&seat!==S.turn?'Tapu sahibi '+ownerLabel(landingTile)+' · ':'')+
       'Bölgedeki rakipler '+rivals.join(' · ')+'</p>':'')+
     (purchaseCompletes?'<p class="district-complete">'+(hasMortgage?'Grup tamamlanır. Tam kira için ipotekleri kaldır.':'Bu tapuyla grup tamamlanır.')+'</p>':'')+
-    '<details'+(wasOpen?' open':'')+'><summary>Tapular ve kira ayrıntısı</summary>'+
-    '<table><thead><tr><th scope="col">Tapu</th><th scope="col">Liste fiyatı</th><th scope="col">Sahip</th><th scope="col">Grup kirası</th></tr></thead><tbody>'+
-    rows+'</tbody></table><p>'+rentText+
-    (B[landingTile].type==='land'?' Binasız ve ipoteksiz tapular için.':' İpoteksiz tapular için.')+
-    (bankCount?' Bankada '+bankCount+' tapu, toplam liste fiyatı '+money(bankTotal)+'.':'')+
-    '</p></details>';
+    '<details'+(wasOpen?' open':'')+'><summary>Bölgedeki '+total+' tapuyu göster</summary>'+
+    '<div class="brief-table"><table><thead><tr><th scope="col">Tapu</th><th scope="col">Alış fiyatı</th><th scope="col">Sahip</th>'+
+    '<th scope="col">Bölge tamamlanınca<br><small>Tek iniş kirası</small></th></tr></thead><tbody>'+
+    rows+'</tbody></table></div><dl class="brief-totals">'+visitRow+bankRow+'</dl>'+
+    '<p class="brief-note">'+rentFootnote+'</p></details>';
 }
 
 function renderPlayers(){
