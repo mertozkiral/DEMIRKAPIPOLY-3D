@@ -313,7 +313,38 @@ button.danger:hover:not(:disabled){background:#ad3943}
   .brief-metrics div{padding:5px}
   .brief-metrics dt{min-height:2.1em}
 }
-</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><div class="cubes" id="cubes" aria-hidden="true"></div><output id="rollResult"></output><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun paneli</button><div class="camera"><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><button id="myDeeds" class="primary">Tapularım</button><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
+
+.dice-tray{position:absolute;inset:0;pointer-events:none;transform-style:preserve-3d}
+.dice-tray[hidden]{display:none}
+.dice-tray .cube{position:absolute;left:50%;top:50%;--half:26px}
+.dice-tray .cube-face{border-radius:5px}
+.roll-overlay{inset:12px auto auto 50%;transform:translateX(-50%);min-width:180px;max-width:calc(100% - 24px);padding:0;gap:5px;background:none}
+.roll-overlay output:empty{display:none}
+.roll-overlay strong,.roll-overlay output{box-shadow:0 4px 12px #17365b55}
+
+.trade-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.trade-side{min-width:0;padding:10px;border:1px solid #9dbde0;border-radius:10px;background:#e6f3ff}
+.trade-side:last-child{background:#fff0c6;border-color:#cfa558}
+.trade-side h3{margin:0;color:#173d7c}
+.modal .trade-side label{margin:7px 0 4px}
+.trade-summary{padding:9px;border-left:3px solid #407dbc;background:#eaf4ff;border-radius:5px}
+.trade-error{color:#982c38!important}
+.trade-error:empty{display:none}
+@media(max-width:430px){.trade-grid{grid-template-columns:1fr}.trade-side{padding:7px}}
+
+.setup-options{display:grid;gap:12px;margin:15px 0 10px}
+.setup-options fieldset{min-width:0;margin:0;padding:8px 10px 10px;border:1px solid #a3c3e4;border-radius:11px;background:#e6f3ff}
+.setup-options fieldset:nth-child(2){border-color:#d9b575;background:#fff1c9}
+.setup-options legend{padding:0 6px;font-weight:800;color:#214b82}
+.number-options{display:flex;gap:6px}
+.number-options button{flex:1;min-width:0;padding:5px;font-size:17px;background:#fff;border-color:#9dbbe1;box-shadow:0 2px #b6c9e4}
+.number-options button[aria-pressed=true]{background:#21579c;border-color:#133e79;color:#fff;box-shadow:0 2px #183b70}
+.setup-names{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 8px}
+@media(max-width:420px){.setup-names{grid-template-columns:1fr}}
+
+.game-panel{left:auto;right:18px;width:min(740px,calc(100% - 36px))}
+@media(max-width:660px){.game-panel{right:8px;width:calc(100% - 16px)}}
+</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><output id="rollResult"></output><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun paneli</button><div class="camera"><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><button id="myDeeds" class="primary">Tapularım</button><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
 <script>
 'use strict';
 const $=id=>document.getElementById(id), money=n=>`${Math.round(n).toLocaleString('tr-TR')} ₺`, esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])), colors=['#8c634e','#74b6d7','#c26ba2','#e39745','#cf5350','#dbbf4c','#52a67c','#496fc0'], pcolors=['#f4ca65','#70c6f1','#f08094','#86d6a7','#c7a0fa','#f2a56d'];
@@ -324,7 +355,82 @@ const ownable=b=>['land','transit','utility'].includes(b.type), group=g=>B.map((
 const chance=[['Define buldun!','cash',150],['Düğün altınları sana kaldı!','cash',100],['Arkadaşın borcunu ödemedi.','cash',-75],['Lüks restoran hesabı.','cash',-50],['Eski arabanı iyi fiyata sattın.','cash',120],['Vergi borcun silindi.','cash',100],['Trafik cezası.','cash',-40],['Asfalt Düğün Salonu’na ilerle.','move',39],['Başlangıca ilerle.','move',0],['Hesabına para yatırıldı.','cash',80],['Telefon ekranın kırıldı.','cash',-35],['Kiracın evi terk etti.','cash',-60],['Çekilişten araba kazandın!','cash',200],['Arkadaşlarından sürpriz: Her oyuncudan 20 ₺ al.','collect',20],['Polis kontrolü: Cezaevine git.','jail'],['Bir sonraki kiranı yarı fiyatına öde.','discount'],['İnşaat masrafları: Ev başına 20, otel başına 50 ₺.','repair',20,50],['İş yerinden prim aldın.','cash',90],['Cezaevinden ücretsiz çıkış kartı.','free'],['Miras kaldı!','cash',250]];
 const finance=[['Banka faiz ödemesi.','cash',75],['Vergi iadesi.','cash',100],['Ek gelir.','cash',50],['Yatırımın değer kazandı.','cash',150],['Gayrimenkul vergisi.','cash',-100],['Altyapı: Ev başına 15, otel başına 40 ₺.','repair',15,40],['Kredi: 200 ₺ al; bir sonraki Başlangıç geçişinde 250 ₺ öde.','loan'],['Şirketin zarar etti.','cash',-120],['Borsadan kazanç.','cash',180],['Ekonomik kriz.','cash',-100],['Kira desteği.','cash',80],['Yeni iş anlaşması.','cash',130],['Sigorta primi.','cash',-50],['İmar izni: Bir sonraki ev ücretsiz.','permit'],['İcra masrafı.','cash',-75],['Belediye teşviki.','cash',100],['Denetim cezası.','cash',-60],['Temettü: Her arsan için 10 ₺ al.','perland',10],['Bakım: Her ulaşım tesisi için 20 ₺ öde.','pertransit',-20],['Finansal fırsat.','cash',200]];
 let S=null,selected=0,angle=-7,tilt=30,botTimer=null,toastTimer=null; const shuffle=a=>{a=[...a];for(let i=a.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};const current=()=>S.players[S.turn], alive=()=>S.players.map((p,i)=>!p.out?i:-1).filter(i=>i>=0), assets=id=>B.map((b,i)=>S.props[i].owner===id?i:-1).filter(i=>i>=0), complete=(id,g)=>group(g).every(i=>S.props[i].owner===id&&!S.props[i].mort), log=t=>{S.log.unshift(t);S.log=S.log.slice(0,120)}, setMsg=t=>{S.msg=t;log(t)}, phase=p=>{S.phase=p}, toast=t=>{clearTimeout(toastTimer);$('toast').textContent=t;$('toast').hidden=false;toastTimer=setTimeout(()=>$('toast').hidden=true,2700)}, isHuman=()=>S&&!current().bot&&S.phase!=='over', activeName=()=>current().name;
-function setup(){suspendedDeed=null;wholeBoard=false;landingTile=null;landingCharge=null;renderLandingBrief();showProgress('');focusTile=null;camera();clearTimeout(botTimer);$('overlay').hidden=false;let resume='';try{if(localStorage.getItem('demirkapipoly-v2'))resume='<button id="resume">Kayıtlı oyunu aç</button>'}catch{}$('modal').innerHTML=`<h2>DEMİRKAPIPOLY 3D</h2><p>40 kare, ${B.filter(ownable).length} mülk, iki kart destesi ve gerçek emlak ticareti. Her oyuncu 1.500 ₺ ile başlar.</p><div class="setupgrid"><div><label for="count">Toplam oyuncu</label><select id="count">${[2,3,4,5,6].map(n=>`<option ${n===4?'selected':''}>${n}</option>`).join('')}</select></div><div><label for="bots">Bilgisayar oyuncusu</label><select id="bots"></select></div></div><div id="names"></div><div class="actions"><button class="primary" id="startBtn">Oyunu başlat</button>${resume}${S?'<button id="cancelSetup">Devam et</button>':''}</div><p class="hint">Bilgisayar rakipleri veya aynı bilgisayarda arkadaşlarınla oyna. İnternet gerekmez.</p>`;const update=()=>{let n=+$('count').value, old=$('bots').value; $('bots').innerHTML=Array.from({length:n},(_,i)=>`<option ${i===Math.min(old===''?n-1:+old,n-1)?'selected':''}>${i}</option>`).join('');names()};const names=()=>{let n=+$('count').value-+$('bots').value;$('names').innerHTML=Array.from({length:n},(_,i)=>`<label for="name${i}">${i+1}. oyuncu adı</label><input maxlength="24" id="name${i}" value="Oyuncu ${i+1}">`).join('')};$('count').onchange=update;$('bots').onchange=names;update();$('startBtn').onclick=()=>{let n=+$('count').value,bots=+$('bots').value;lastHuman=0;S={models:shuffle(tokenModels.map((_,i)=>i)).slice(0,n),players:Array.from({length:n},(_,i)=>({name:i<n-bots?($('name'+i).value.trim()||`Oyuncu ${i+1}`):`Rakip ${i-(n-bots)+1}`,bot:i>=n-bots,cash:1500,pos:0,jail:0,jailed:false,out:false,free:0,discount:0,permit:0,loan:0})),props:B.map(()=>({owner:-1,h:0,mort:false})),turn:0,round:1,dice:[1,1],phase:'roll',doubles:0,extra:false,log:[],msg:'Zar atarak başla.',card:null,chance:shuffle(chance.map((_,i)=>i)),finance:shuffle(finance.map((_,i)=>i)),debt:null,auction:null,afterMove:null};selected=0;log('Oyun başladı. Her oyuncu 1.500 ₺ aldı.');close();render()};if($('resume'))$('resume').onclick=load;if($('cancelSetup'))$('cancelSetup').onclick=()=>{close();render()}}
+
+function setup(){
+  suspendedDeed=null;
+  wholeBoard=false;
+  landingTile=null;
+  landingCharge=null;
+  renderLandingBrief();
+  showProgress('');
+  focusTile=null;
+  camera();
+  let resume=false;
+  try{resume=!!localStorage.getItem('demirkapipoly-v2')}catch{}
+  modal('<h2>Yeni oyun</h2>'+
+    '<div class="setup-options"><fieldset><legend>Toplam oyuncu</legend><div class="number-options" id="setupCount"></div></fieldset>'+
+    '<fieldset><legend>Bilgisayar oyuncusu</legend><div class="number-options" id="setupBots"></div></fieldset></div>'+
+    '<div id="names" class="setup-names"></div><div class="actions"><button class="primary" id="startBtn">Oyunu başlat</button>'+
+    (resume?'<button id="resume">Kayıtlı oyunu aç</button>':'')+
+    (S?'<button id="cancelSetup">Devam et</button>':'')+'</div>');
+  let count=4,bots=3;
+  const nameDrafts=[];
+  function numberChoices(container,values,selected,choose){
+    container.replaceChildren(...values.map(value=>{
+      const option=document.createElement('button');
+      option.type='button';
+      option.textContent=String(value);
+      option.setAttribute('aria-pressed',String(value===selected));
+      option.onclick=()=>{
+        choose(value);
+        container.children[values.indexOf(value)].focus({preventScroll:true});
+      };
+      return option;
+    }));
+  }
+  function renderSetup(){
+    numberChoices($('setupCount'),[2,3,4,5,6],count,value=>{
+      count=value;
+      bots=Math.min(bots,count-1);
+      renderSetup();
+    });
+    numberChoices($('setupBots'),Array.from({length:count},(_,i)=>i),bots,value=>{
+      bots=value;
+      renderSetup();
+    });
+    $('names').innerHTML=Array.from({length:count-bots},(_,i)=>
+      '<div><label for="name'+i+'">'+(i+1)+'. oyuncu adı</label><input maxlength="24" id="name'+i+
+      '" value="'+esc(nameDrafts[i]??('Oyuncu '+(i+1)))+'"></div>'
+    ).join('');
+    for(let i=0;i<count-bots;i++){
+      const input=$('name'+i);
+      input.oninput=()=>{nameDrafts[i]=input.value};
+    }
+  }
+  renderSetup();
+  $('startBtn').onclick=()=>{
+    const humans=count-bots;
+    lastHuman=0;
+    S={
+      models:shuffle(tokenModels.map((_,i)=>i)).slice(0,count),
+      players:Array.from({length:count},(_,i)=>({
+        name:i<humans?($('name'+i).value.trim()||'Oyuncu '+(i+1)):'Rakip '+(i-humans+1),
+        bot:i>=humans,cash:1500,pos:0,jail:0,jailed:false,out:false,free:0,discount:0,permit:0,loan:0
+      })),
+      props:B.map(()=>({owner:-1,h:0,mort:false})),turn:0,round:1,dice:[1,1],phase:'roll',
+      doubles:0,extra:false,log:[],msg:'Zar atarak başla.',card:null,
+      chance:shuffle(chance.map((_,i)=>i)),finance:shuffle(finance.map((_,i)=>i)),
+      debt:null,auction:null,afterMove:null
+    };
+    selected=0;
+    log('Oyun başladı. Her oyuncu 1.500 ₺ aldı.');
+    close();
+    render();
+  };
+  if(resume)$('resume').onclick=load;
+  if(S)$('cancelSetup').onclick=()=>{close();render()};
+}
+
 function close(){deedsOpen=false;activeDeed=null;$('overlay').hidden=true;$('overlay').classList.remove('is-deed');$('modal').setAttribute('aria-modal','true')}
 function blockingOverlay(){return !$('overlay').hidden&&!deedsOpen}
 function modal(html,nonblocking=false){if(!nonblocking){if(deedsOpen)suspendDeeds(S?.turn,false);clearTimeout(botTimer)}$('modal').innerHTML=html;$('overlay').classList.toggle('is-deed',nonblocking);$('modal').setAttribute('aria-modal',String(!nonblocking));$('overlay').hidden=false}function save(){if(!S)return;try{localStorage.setItem('demirkapipoly-v2',JSON.stringify(S));toast('Oyun bu tarayıcıya kaydedildi.')}catch{toast('Tarayıcı kaydetmeye izin vermedi.')}}function load(){try{let x=JSON.parse(localStorage.getItem('demirkapipoly-v2'));if(!x||x.props.length!==40)throw 0;S=x;wholeBoard=false;if(follow)focusOn(current().pos);selected=current().pos;landingTile=['buy','auction','end','debt'].includes(S.phase)?selected:null;showProgress('');close();render()}catch{toast('Kayıt açılamadı.')}}
@@ -442,7 +548,7 @@ const faceLayout=[
   ['rotateY(-90deg)',[1,3,5,7,9]],
   ['rotateY(180deg)',[1,3,4,6,7,9]]
 ];
-const faceAngles=[[0,0],[0,-90],[-90,0],[90,0],[0,90],[0,180]];
+
 
 function initDice(){
   for(let index=0;index<2;index++){
@@ -502,12 +608,13 @@ function camera(speed=360){
   const width=980*Math.abs(cos)+560*Math.abs(sin);
   const height=(980*Math.abs(sin)+560*Math.abs(cos))*tiltCos;
   const fit=Math.max(.1,Math.min((w-32)/(width+55),(h-Math.min(h*.33,135))/(height+50)));
-  const cameraTile=wholeBoard||!follow?null:focusTile;
-  const scale=cameraTile===null?fit*manualZoom:Math.min(2.65,Math.max(fit*2.15,.88)*manualZoom);
+  const cameraTile=wholeBoard||!follow||diceCamera?null:focusTile;
+  const diceTarget=diceCamera&&!diceCamera.showOverview?diceCamera.target:null;
+  const scale=diceTarget?Math.max(.1,Math.min(2.65,(w-32)/(diceCamera.span+95),Math.max(fit*3.25,1.25))):diceCamera?fit:cameraTile===null?fit*manualZoom:Math.min(2.65,Math.max(fit*2.15,.88)*manualZoom);
   let panX=0,panY=0;
-  if(cameraTile!==null){
-    const [column,row]=loc(cameraTile);
-    const x=(column-.5)*70-490,y=(row-.5)*70-280;
+  if(diceTarget||cameraTile!==null){
+    const [column,row]=diceTarget?[0,0]:loc(cameraTile);
+    const [x,y]=diceTarget??[(column-.5)*70-490,(row-.5)*70-280];
     panX=-(x*cos-y*sin)*scale;
     panY=-(x*sin+y*cos)*scale*tiltCos;
   }
@@ -519,8 +626,8 @@ function camera(speed=360){
   board.style.setProperty('--angle',angle+'deg');
   $('camFlat').setAttribute('aria-pressed',String(tilt!==0));
   const canReturn=wholeBoard&&follow&&S&&S.phase!=='over';
-  $('camReset').textContent=canReturn?'Piyona dön':'Tahtayı göster';
-  $('camReset').setAttribute('aria-pressed',String(wholeBoard));
+  $('camReset').textContent=diceCamera?(diceCamera.showOverview?'Zara dön':'Tahtayı göster'):canReturn?'Piyona dön':'Tahtayı göster';
+  $('camReset').setAttribute('aria-pressed',String(diceCamera?!!diceCamera.showOverview:wholeBoard));
 }
 
 function adjustZoom(factor){
@@ -562,6 +669,11 @@ function initOrbit(){
 }
 
 function showWholeBoard(){
+  if(diceCamera){
+    diceCamera.showOverview=!diceCamera.showOverview;
+    camera();
+    return;
+  }
   if(wholeBoard&&follow&&S&&S.phase!=='over'){
     wholeBoard=false;
     focusOn(previewTile??current().pos);
@@ -589,49 +701,192 @@ function focusOn(tile,speed){
 
 const pause=ms=>new Promise(resolve=>setTimeout(resolve,ms));
 
-function tossFrames(index,resultX,resultY){
-  const direction=index===0?-1:1;
-  const launchX=direction*(24+Math.random()*32);
-  const launchY=53+Math.random()*27;
-  const spinX=(Math.random()<.5?-1:1)*(2+Math.floor(Math.random()*2))*360;
-  const spinY=direction*(2+Math.floor(Math.random()*3))*360;
-  const wobble=7+Math.random()*13;
-  const firstContact=.42+Math.random()*.10;
-  return Array.from({length:21},(_,frame)=>{
-    const t=frame/20;
-    const impact=Math.max(0,(t-firstContact)/(1-firstContact));
-    const drop=t<firstContact?launchY*(1-(t/firstContact)**2):0;
-    const bounce=impact<.48
-      ?wobble*Math.sin(Math.PI*impact/.48)
-      :wobble*.33*Math.sin(Math.PI*(impact-.48)/.52);
-    const x=launchX*(1-t)+direction*10*Math.sin(Math.PI*t);
-    const y=-(drop+bounce);
-    const rotationProgress=1-(1-t)**1.6;
-    const pitch=resultX*rotationProgress+spinX*(rotationProgress-1);
-    const yaw=resultY*rotationProgress+spinY*(rotationProgress-1);
-    return {offset:t,transform:'translate3d('+x+'px,'+y+'px,0) rotateX('+pitch+'deg) rotateY('+yaw+'deg)'};
-  });
+
+const diceHalf=26;
+const diceInertia=(diceHalf*2)**2/6;
+const dieNormals=[[0,0,1],[1,0,0],[0,-1,0],[0,1,0],[-1,0,0],[0,0,-1]];
+const dieCorners=[-diceHalf,diceHalf].flatMap(x=>[-diceHalf,diceHalf].flatMap(y=>[-diceHalf,diceHalf].map(z=>[x,y,z])));
+let diceCamera=null;
+
+const dot=(a,b)=>a.reduce((sum,value,i)=>sum+value*b[i],0);
+const cross=([x,y,z],[a,b,c])=>[y*c-z*b,z*a-x*c,x*b-y*a];
+const scaled=(v,n)=>v.map(value=>value*n);
+const plus=(a,b)=>a.map((value,i)=>value+b[i]);
+function unit(v){return scaled(v,1/(Math.hypot(...v)||1))}
+
+function multiplyRotation(a,b){
+  const [x,y,z,w]=a,[i,j,k,t]=b;
+  return [w*i+x*t+y*k-z*j,w*j-x*k+y*t+z*i,w*k+x*j-y*i+z*t,w*t-x*i-y*j-z*k];
+}
+function rotation(axis,angle){
+  return [...scaled(unit(axis),Math.sin(angle/2)),Math.cos(angle/2)];
+}
+function rotateVector(q,v){
+  const axis=q.slice(0,3);
+  const t=scaled(cross(axis,v),2);
+  return plus(v,plus(scaled(t,q[3]),cross(axis,t)));
+}
+function randomBetween(low,high){return low+Math.random()*(high-low)}
+
+function makeRigidDie(side){
+  const axis=[randomBetween(-1,1),randomBetween(-1,1),randomBetween(-1,1)];
+  return {
+    p:[-337-side*13,side*randomBetween(39,63),randomBetween(80,105)],
+    v:[randomBetween(352,427),-side*randomBetween(9,23),randomBetween(82,134)],
+    q:rotation(axis,randomBetween(0,Math.PI*2)),
+    w:[randomBetween(3,13)*side,randomBetween(8,17),randomBetween(-9,9)]
+  };
 }
 
-async function showDice(player,first,second,pace,manual){
-  const overlay=$('rollOverlay');
+function applyDieImpulse(die,arm,impulse){
+  die.v=plus(die.v,impulse);
+  die.w=plus(die.w,scaled(cross(arm,impulse),1/diceInertia));
+}
+
+function stepRigidDie(die,dt){
+  die.v[2]-=1050*dt;
+  die.v=scaled(die.v,Math.exp(-.12*dt));
+  die.p=plus(die.p,scaled(die.v,dt));
+  const spin=Math.hypot(...die.w);
+  if(spin>.0001)die.q=unit(multiplyRotation(rotation(die.w,spin*dt),die.q));
+  const corners=dieCorners.map(corner=>rotateVector(die.q,corner));
+  const low=Math.min(...corners.map(corner=>corner[2]));
+  if(die.p[2]+low<=.04){
+    const up=[0,0,1];
+    die.p[2]=-low+.04;
+    const contact=corners.filter(corner=>corner[2]-low<1.15);
+    const arm=scaled(contact.reduce(plus,[0,0,0]),1/contact.length);
+    const incoming=plus(die.v,cross(die.w,arm));
+    if(incoming[2]<0){
+      const angular=cross(arm,up);
+      const bounce=incoming[2]<-52?.4:.02;
+      const strength=-(1+bounce)*incoming[2]/(1+dot(angular,angular)/diceInertia);
+      applyDieImpulse(die,arm,scaled(up,strength));
+      const slip=[incoming[0],incoming[1],0],speed=Math.hypot(...slip);
+      if(speed>.01){
+        const direction=scaled(slip,-1/speed);
+        const twist=cross(arm,direction);
+        const friction=Math.min(.46*strength,speed/(1+dot(twist,twist)/diceInertia));
+        applyDieImpulse(die,arm,scaled(direction,friction));
+      }
+    }
+    die.v[0]*=.977;
+    die.v[1]*=.977;
+    die.w=scaled(die.w,.977);
+  }
+  for(const dimension of [0,1]){
+    const extent=Math.max(...corners.map(corner=>Math.abs(corner[dimension])));
+    const limit=(dimension===0?474:265)-extent;
+    if(Math.abs(die.p[dimension])>limit){
+      const side=Math.sign(die.p[dimension]);
+      die.p[dimension]=side*limit;
+      if(side*die.v[dimension]>0)die.v[dimension]*=-.37;
+      die.w=scaled(die.w,.8);
+    }
+  }
+}
+
+function collideDice(a,b){
+  const delta=[b.p[0]-a.p[0],b.p[1]-a.p[1],0];
+  const distance=Math.hypot(...delta);
+  if(distance>=diceHalf*2||distance<.001||Math.abs(a.p[2]-b.p[2])>diceHalf*1.7)return;
+  const normal=scaled(delta,1/distance);
+  const correction=scaled(normal,(diceHalf*2-distance)/2);
+  a.p=plus(a.p,scaled(correction,-1));
+  b.p=plus(b.p,correction);
+  const speed=dot(plus(b.v,scaled(a.v,-1)),normal);
+  if(speed>=0)return;
+  const impulse=scaled(normal,-speed*.67);
+  applyDieImpulse(a,scaled(normal,diceHalf),scaled(impulse,-1));
+  applyDieImpulse(b,scaled(normal,-diceHalf),impulse);
+}
+
+function settleDie(die){
+  const normals=dieNormals.map(normal=>rotateVector(die.q,normal));
+  const face=normals.reduce((best,normal,i)=>normal[2]>normals[best][2]?i:best,0);
+  const up=normals[face];
+  const axis=cross(up,[0,0,1]);
+  if(Math.hypot(...axis)>.0001){
+    const angle=Math.acos(Math.max(-1,Math.min(1,up[2])));
+    die.q=unit(multiplyRotation(rotation(axis,angle),die.q));
+  }
+  die.p[2]=diceHalf+.04;
+  return face+1;
+}
+
+function dieTransform(die){
+  const q=die.q[3]<0?scaled(die.q,-1):die.q;
+  const [x,y,z,w]=q;
+  // A matrix avoids axis-angle interpolation jumping across a full rotation.
+  const matrix=[
+    1-2*(y*y+z*z),2*(x*y+z*w),2*(x*z-y*w),0,
+    2*(x*y-z*w),1-2*(x*x+z*z),2*(y*z+x*w),0,
+    2*(x*z+y*w),2*(y*z-x*w),1-2*(x*x+y*y),0,
+    die.p[0]-diceHalf,die.p[1]-diceHalf,die.p[2],1
+  ];
+  return 'matrix3d('+matrix.map(value=>value.toFixed(5)).join(',')+')';
+}
+
+function simulateToss(){
+  const bodies=[makeRigidDie(-1),makeRigidDie(1)];
+  const paths=bodies.map(die=>[{transform:dieTransform(die)}]);
+  const dt=1/120;
+  for(let tick=1;tick<=300;tick++){
+    bodies.forEach(die=>stepRigidDie(die,dt));
+    collideDice(...bodies);
+    if(tick%2===0)bodies.forEach((die,i)=>paths[i].push({transform:dieTransform(die)}));
+  }
+  const values=bodies.map(settleDie);
+  bodies.forEach((die,i)=>paths[i].push({transform:dieTransform(die)}));
+  const [x,y]=scaled(plus(bodies[0].p,bodies[1].p),.5);
+  const span=Math.hypot(bodies[1].p[0]-bodies[0].p[0],bodies[1].p[1]-bodies[0].p[1]);
+  return {values,paths,target:[x,y],span,bodies};
+}
+
+function simulateDice(){
+  let best=null,bestDistance=Infinity;
+  for(let attempt=0;attempt<12;attempt++){
+    const result=simulateToss();
+    const distance=Math.max(...result.bodies.map(die=>Math.hypot(die.p[0],die.p[1])));
+    if(distance<=165&&result.span<=175)return result;
+    if(distance<bestDistance){best=result;bestDistance=distance}
+  }
+  return best;
+}
+
+async function showDice(player,result,pace,manual){
+  const overlay=$('rollOverlay'),tray=$('cubes');
+  const [first,second]=result.values;
+  overlay.hidden=false;
+  tray.hidden=false;
   $('rollPlayer').textContent=player+' zar atıyor';
   $('rollResult').textContent='';
-  overlay.hidden=false;
-  const animations=[first,second].map((value,index)=>{
-    const cube=$('cubes').children[index];
-    const [x,y]=faceAngles[value-1];
-    cube.style.setProperty('--rx',x+'deg');
-    cube.style.setProperty('--ry',y+'deg');
-    if(reducedMotion.matches||!cube.animate)return Promise.resolve();
-    return cube.animate(tossFrames(index,x,y),{duration:950+Math.random()*340,easing:'linear'}).finished.catch(()=>{});
+  diceCamera={target:null};
+  camera(500);
+  const reduce=reducedMotion.matches;
+  if(!reduce){
+    result.paths.forEach((path,i)=>{tray.children[i].style.transform=path[0].transform});
+    await pause(470);
+  }
+  const animations=result.paths.map((path,index)=>{
+    const cube=tray.children[index];
+    cube.style.transform=path.at(-1).transform;
+    if(reduce||!cube.animate)return Promise.resolve();
+    return cube.animate(path,{duration:2660,easing:'linear'}).finished.catch(()=>{});
   });
   await Promise.all(animations);
+  diceCamera.target=result.target;
+  diceCamera.span=result.span;
+  camera(reduce?0:850);
+  if(!reduce)await pause(870);
   $('rollPlayer').textContent=player+' zar attı';
   $('rollResult').textContent=first+' + '+second+' = '+(first+second);
   if(manual)await waitForContinue('diceContinue',overlay,'is-waiting');
   else await pause(pace.dice);
   overlay.hidden=true;
+  tray.hidden=true;
+  diceCamera=null;
+  camera(500);
 }
 
 async function roll(){
@@ -639,7 +894,8 @@ async function roll(){
   const player=current();
   if(deedsOpen&&!player.bot)suspendDeeds(S.turn,true);
   const previous=player.pos;
-  const first=1+Math.floor(Math.random()*6),second=1+Math.floor(Math.random()*6);
+  const throwResult=simulateDice();
+  const [first,second]=throwResult.values;
   const doubles=first===second;
   const goesToJail=!player.jailed&&doubles&&S.doubles===2;
   const walks=!goesToJail&&(!player.jailed||doubles||player.jail>=2);
@@ -659,7 +915,8 @@ async function roll(){
 
   try{
     await pause(pace.settle);
-    await showDice(player.name,first,second,pace,manual);
+    await showDice(player.name,throwResult,pace,manual);
+    focusOn(previous,500);
     S.dice=[first,second];
     if(walks){
       const distance=first+second;
@@ -697,6 +954,8 @@ async function roll(){
     else if(!manual)await pause(pace.landing);
   }finally{
     $('rollOverlay').hidden=true;
+    $('cubes').hidden=true;
+    diceCamera=null;
     stage.style.removeProperty('--piece-speed');
     previewTile=null;
     moving=false;
@@ -753,7 +1012,94 @@ function auctionAct(amount){if(S.phase!=='auction')return;let a=S.auction,id=a.o
 function nextTurn(){if(S.phase==='over')return;let old=S.turn;for(let i=1;i<=S.players.length;i++){let j=(old+i)%S.players.length;if(!S.players[j].out){S.turn=j;if(j<=old)S.round++;break}}S.phase='roll';S.doubles=0;S.extra=false;S.card=null;S.debt=null;S.msg='Zar atarak turuna başla.';selected=current().pos;landingTile=null;landingCharge=null;showProgress('');if(follow)focusOn(selected);else camera();resumeAfterTurn(old)}
 
 function tradable(i,id){let b=B[i];return S.props[i].owner===id&&(b.type!=='land'||group(b.g).every(j=>!S.props[j].h))}
-function trade(){if(!isHuman()||!['roll','end','debt','buy'].includes(S.phase))return;let id=S.turn,others=alive().filter(i=>i!==id);if(!others.length)return;const options=(who)=>'<option value="-1">Mülk yok</option>'+assets(who).filter(i=>tradable(i,who)).map(i=>`<option value="${i}">${esc(B[i].name)}${S.props[i].mort?' (ipotekli)':''}</option>`).join('');modal(`<h2>Takas masası</h2><label for="partner">Rakip oyuncu</label><select id="partner">${others.map(i=>`<option value="${i}">${esc(S.players[i].name)}</option>`).join('')}</select><div class="setupgrid"><div><label for="give">Verdiğin mülk</label><select id="give">${options(id)}</select><label for="giveCash">Verdiğin nakit (₺)</label><input id="giveCash" type="number" min="0" value="0"></div><div><label for="take">Alacağın mülk</label><select id="take"></select><label for="takeCash">Alacağın nakit (₺)</label><input id="takeCash" type="number" min="0" value="0"></div></div><p id="tradeNote"></p><div class="actions"><button class="primary" id="offer">Teklif et</button><button id="cancel">Vazgeç</button></div>`);const refresh=()=>{$('take').innerHTML=options(+$('partner').value)};$('partner').onchange=refresh;refresh();$('cancel').onclick=()=>{close();render()};$('offer').onclick=()=>{let j=+$('partner').value,g=+$('give').value,t=+$('take').value,gc=+$('giveCash').value,tc=+$('takeCash').value;let me=S.players[id],other=S.players[j];if(![gc,tc].every(n=>Number.isInteger(n)&&n>=0)||gc>me.cash||tc>other.cash||(g<0&&t<0&&gc===tc)){$('tradeNote').textContent='Geçerli ve ödenebilir bir teklif gir.';return}const accept=()=>{me.cash+=tc-gc;other.cash+=gc-tc;if(g>=0)S.props[g].owner=j;if(t>=0)S.props[t].owner=id;log(`${me.name} ve ${other.name} takas yaptı.`);close();render()};if(other.bot){let value=(i,who)=>i<0?0:B[i].price*(S.props[i].mort?.5:1)*(B[i].type==='land'&&group(B[i].g).some(k=>k!==i&&S.props[k].owner===who)?1.45:1);if(gc+value(g,j)>=tc+value(t,j)*1.12&&other.cash-tc+gc>=70)accept();else $('tradeNote').textContent='Rakip teklifi reddetti. Daha iyi bir teklif dene.'}else{modal(`<h2>${esc(other.name)}, teklifi onaylıyor musun?</h2><p>${esc(me.name)} sana ${g>=0?esc(B[g].name):'mülk yok'} + ${money(gc)} veriyor. Karşılığında ${t>=0?esc(B[t].name):'mülk yok'} + ${money(tc)} istiyor.</p><div class="actions"><button class="primary" id="yes">Kabul et</button><button id="no">Reddet</button></div>`);$('yes').onclick=accept;$('no').onclick=()=>{close();render()}}}}
+
+function trade(){
+  if(!isHuman()||!['roll','end','debt','buy'].includes(S.phase))return;
+  const id=S.turn;
+  const partners=alive().filter(player=>player!==id);
+  if(!partners.length)return;
+
+  const options=player=>'<option value="-1">Mülk seçilmedi</option>'+assets(player)
+    .filter(index=>tradable(index,player))
+    .map(index=>'<option value="'+index+'">'+esc(B[index].name)+(S.props[index].mort?' (ipotekli)':'')+'</option>')
+    .join('');
+  const side=(verb,id,propertyOptions)=>
+    '<section class="trade-side"><h3>'+verb+'</h3>'+
+    '<label for="'+id+'">Mülk</label><select id="'+id+'">'+propertyOptions+'</select>'+
+    '<label class="trade-cash" for="'+id+'Cash">Para (isteğe bağlı)<input id="'+id+'Cash" type="number" min="0" step="1" placeholder="0 ₺"></label></section>';
+
+  modal('<h2>Takas</h2><label for="partner">Kiminle?</label><select id="partner">'+partners.map(player=>
+    '<option value="'+player+'">'+esc(S.players[player].name)+'</option>').join('')+'</select>'+
+    '<div class="trade-grid">'+side('Sen verirsin','give',options(id))+side('Sen alırsın','take','')+'</div>'+
+    '<p class="trade-summary" id="tradeSummary" aria-live="polite"></p><p class="trade-error" id="tradeNote" role="status"></p>'+
+    '<div class="actions"><button class="primary" id="offer">Teklif gönder</button><button id="cancel">Vazgeç</button></div>');
+
+  const describe=(property,cash)=>[property>=0?B[property].name:'',cash>0?money(cash):''].filter(Boolean).join(' + ')||'Hiçbir şey';
+  const read=()=>({
+    otherId:+$('partner').value,give:+$('give').value,take:+$('take').value,
+    giveCash:+$('giveCash').value,takeCash:+$('takeCash').value
+  });
+  function verify(offer){
+    const {otherId,give,take,giveCash,takeCash}=offer;
+    if(!partners.includes(otherId))return 'Bir rakip seç.';
+    if(![giveCash,takeCash].every(amount=>Number.isSafeInteger(amount)&&amount>=0))return 'Para tutarını tam sayı olarak yaz.';
+    if(giveCash>S.players[id].cash)return 'Bu tutarı ödeyecek paran yok.';
+    if(takeCash>S.players[otherId].cash)return 'Rakibin bu tutarı ödeyemez.';
+    if(give>=0&&!tradable(give,id)||take>=0&&!tradable(take,otherId))return 'Seçilen mülk takasa uygun değil.';
+    if(give<0&&take<0&&giveCash===takeCash)return 'Bir mülk seç veya para ekle.';
+    return '';
+  }
+  function preview(){
+    const offer=read();
+    const {give,take,giveCash,takeCash}=offer;
+    const empty=give<0&&take<0&&!giveCash&&!takeCash;
+    $('tradeSummary').textContent=empty?'Mülk veya para seçtiğinde teklif burada görünür.':
+      describe(give,giveCash)+' verirsin · '+describe(take,takeCash)+' alırsın.';
+    const error=verify(offer);
+    $('tradeNote').textContent=empty?'':error;
+    $('offer').disabled=!!error;
+  }
+  $('partner').onchange=()=>{
+    $('take').innerHTML=options(+$('partner').value);
+    preview();
+  };
+  $('partner').onchange();
+  for(const key of ['give','take','giveCash','takeCash'])$(key).oninput=preview;
+  $('cancel').onclick=()=>{close();render()};
+  $('offer').onclick=()=>{
+    const data=read();
+    const error=verify(data);
+    if(error){$('tradeNote').textContent=error;return}
+    const {otherId,give,take,giveCash,takeCash}=data;
+    const me=S.players[id],other=S.players[otherId];
+    const accept=()=>{
+      me.cash+=takeCash-giveCash;
+      other.cash+=giveCash-takeCash;
+      if(give>=0)S.props[give].owner=otherId;
+      if(take>=0)S.props[take].owner=id;
+      log(me.name+' ve '+other.name+' takas yaptı.');
+      close();
+      render();
+    };
+    if(other.bot){
+      const value=property=>{
+        if(property<0)return 0;
+        const tile=B[property];
+        const matching=tile.type==='land'&&group(tile.g).some(index=>index!==property&&S.props[index].owner===otherId);
+        return tile.price*(S.props[property].mort?.5:1)*(matching?1.45:1);
+      };
+      if(giveCash+value(give)>=takeCash+value(take)*1.12&&other.cash-takeCash+giveCash>=70)accept();
+      else $('tradeNote').textContent=other.name+' bu teklifi kabul etmedi.';
+      return;
+    }
+    modal('<h2>'+esc(other.name)+', takas teklifi</h2><p>'+esc(me.name)+
+      ' sana <strong>'+esc(describe(give,giveCash))+'</strong> veriyor. Karşılığında <strong>'+
+      esc(describe(take,takeCash))+'</strong> istiyor.</p>'+
+      '<div class="actions"><button class="primary" id="yes">Kabul et</button><button id="no">Reddet</button></div>');
+    $('yes').onclick=accept;
+    $('no').onclick=()=>{close();render()};
+  };
+}
 function button(label,fn,opts={}){let b=document.createElement('button');b.textContent=label;b.disabled=!!opts.disabled;b.className=opts.kind||'';b.onclick=()=>{if(moving&&!opts.duringMotion)return;fn();if(opts.render!==false&&!blockingOverlay())render()};return b}
 function renderDeed(container,index,refresh){let b=B[index],p=S?.props[index];let html=`<strong>${esc(b.name)}</strong>`;if(ownable(b)){let owner=p?.owner>=0?esc(S.players[p.owner].name):'Banka';html+=`<div class="info" style="margin-top:8px"><span>Satın alma</span><b>${money(b.price)}</b><span>Sahibi</span><b>${owner}</b><span>İpotek değeri</span><b>${money(b.price/2)}</b>`;if(b.type==='land'){html+=`<span>Ev / otel yapım bedeli</span><b>${money(buildCost(b.g))}</b><span>Boş arsa / tam grup</span><b>${money(b.price*.1)} / ${money(b.price*.2)}</b>`;[.25,.6,1.2,1.8,2.5].forEach((r,i)=>html+=`<span>${i===4?'Otel':(i+1)+' ev'}</span><b>${money(b.price*r)}</b>`)}else html+=`<span>Kira</span><b>${b.type==='transit'?'25 / 50 / 100 / 200':'Zar × 4 / 10'}</b>`;if(p?.owner>=0)html+=`<span>Mevcut kira</span><b>${money(rent(index))}</b>`;html+='</div>'}else html+=`<p class="hint">${({start:'Geç veya üzerine gel: 200 ₺ al.',tax:'Bankaya '+money(b.price||0)+' öde.',jail:'Ziyaret veya tutukluluk.',park:'Ücretsiz dinlenme alanı.',gojail:'Doğrudan cezaevine git.',chance:'Kader kartı çek.',finance:'Kenisel kartı çek.'})[b.type]||''}</p>`;if(p?.h||p?.mort)html+='<p class="deed-status">'+deedStatus(index)+'</p>';container.innerHTML=html+'<div class="assetbtns"></div>';if(S&&!moving&&isHuman()&&['roll','end','debt','buy'].includes(S.phase)&&p.owner===S.turn){let a=container.querySelector('.assetbtns');if(b.type==='land'){a.append(button('Ev / otel yap',()=>{build(index);refresh()},{disabled:!canBuild(index)||S.phase==='debt'}),button('Bina sat',()=>{sell(index);refresh()},{disabled:!canSell(index)}))}a.append(p.mort?button('İpoteği kaldır',()=>{unmortgage(index);refresh()},{disabled:current().cash<releaseCost(index)||S.phase==='debt'}):button('İpotek et',()=>{mortgage(index);refresh()},{disabled:!canMortgage(index)}))}}
 
