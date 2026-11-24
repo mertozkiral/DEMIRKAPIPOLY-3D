@@ -107,7 +107,8 @@ body:has(.overlay:not([hidden])){overflow:hidden}
 .piece-badge{position:absolute;bottom:-2px;right:-3px;display:grid;place-items:center;width:11px;height:11px;border-radius:50%;background:var(--p);border:1px solid #192434;color:#142131;font:900 8px system-ui;transform:translateZ(19px) rotateX(-35deg)}
 .piece.is-active .piece-badge{outline:1px solid #ffe4ab}
 
-.stage{touch-action:pan-y;cursor:grab}
+.stage{touch-action:pan-y;cursor:default}
+.stage .board,.stage .tile{cursor:inherit}
 .stage.is-orbiting,.stage.is-orbiting .tile{cursor:grabbing;user-select:none}
 .stage button,.stage select{cursor:pointer}
 .piece-model{transform:translateZ(8px) rotateZ(calc(-1 * var(--angle,-7deg))) rotateX(calc(-1 * var(--tilt,30deg) - 24deg)) rotateY(calc(-23deg - var(--angle,-7deg))) scale(1.06)}
