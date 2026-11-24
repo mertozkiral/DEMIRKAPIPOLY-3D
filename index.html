@@ -376,6 +376,23 @@ button.danger:hover:not(:disabled){background:#ad3943}
 .decision-overlay .modal{width:min(410px,100%)}
 .decision-overlay .modal .actions{justify-content:flex-end}
 .decision-overlay .modal .actions button{flex:0 1 auto}
+
+.trade-partner{border:0;padding:0;margin:0}
+.trade-partner legend{font-weight:800;margin-bottom:5px}
+#tradePartners{display:flex;flex-wrap:wrap;gap:5px}
+#tradePartners button[aria-pressed=true],.trade-choices button[aria-pressed=true]{background:#194779;color:#fff;border-color:#123565}
+.trade-picker{margin:8px 0}
+.trade-picker summary{padding:8px;border:1px solid #83a9ce;border-radius:7px;background:#fff;color:#173d7c;font-weight:750;cursor:pointer}
+.trade-choices{display:grid;gap:4px;max-height:24vh;overflow:auto;margin-top:4px}
+.trade-choices button{text-align:left}
+.trade-option,.trade-fact{border-left:4px solid var(--district,#417aae)}
+.trade-option small{display:block;font-weight:500}
+.trade-fact{padding:5px 7px;background:#fff9e9;color:#23446a;font-size:12px}
+.trade-impact{margin-top:10px;display:grid;gap:5px}
+.trade-impact[hidden],.trade-fact[hidden]{display:none}
+.trade-region{background:#fff;border:1px solid #abcae7;border-radius:8px;margin:4px 0;padding:6px 8px;color:#184478}
+.trade-region div{display:flex;gap:4px 9px;align-items:baseline;flex-wrap:wrap}
+.trade-region small{color:#34516f}
 </style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><output id="rollResult"></output><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun paneli</button><div class="camera"><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><button id="myDeeds" class="primary">Tapularım</button><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head"><h2>Ayarlar</h2><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><details class="section history" open><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
 <div class="overlay decision-overlay" id="decisionOverlay" hidden><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionText"><h2 id="decisionTitle"></h2><p id="decisionText"></p><div class="actions"><button id="decisionCancel">Vazgeç</button><button id="decisionYes" class="primary">Eminim</button></div></section></div>
 <script>
@@ -1048,32 +1065,126 @@ function nextTurn(){if(S.phase==='over')return;let old=S.turn;for(let i=1;i<=S.p
 
 function tradable(i,id){let b=B[i];return S.props[i].owner===id&&(b.type!=='land'||group(b.g).every(j=>!S.props[j].h))}
 
+
+function tradeImpacts(player,{otherId,give,take}){
+  const projectedOwner=index=>index===give?otherId:index===take?player:S.props[index].owner;
+  const affected=new Map();
+  for(const property of [give,take]){
+    if(property<0)continue;
+    const report=districtReport(property);
+    affected.set(report.title,report.boardSet);
+  }
+  return Array.from(affected,([region,tiles])=>{
+    const total=tiles.length;
+    const changes=[player,otherId].flatMap(id=>{
+      const before=tiles.filter(index=>S.props[index].owner===id).length;
+      const after=tiles.filter(index=>projectedOwner(index)===id).length;
+      if(before===after)return [];
+      let outcome='';
+      if(after===total){
+        outcome=tiles.some(index=>S.props[index].mort)?'Bölge tamamlanır, ipotekler kalır':B[tiles[0]].type==='land'?'Bölge tamamlanır · binasız kira iki katına çıkar':'Bölge tamamlanır';
+      }else if(before===total)outcome='Tam bölge bozulur';
+      else if(after===total-1&&after>before)outcome='Bir tapu kalır';
+      if(B[tiles[0]].type==='transit'&&after>0){
+        const fare=money(25*2**(after-1));
+        outcome=(outcome?outcome+' · ':'')+fare+' / ipoteksiz durak';
+      }
+      return [{id,before,after,outcome}];
+    });
+    return {region,total,changes};
+  }).filter(region=>region.changes.length);
+}
+
+function tradeImpactMarkup(player,offer){
+  return tradeImpacts(player,offer).map(({region,total,changes})=>
+    '<section class="trade-region"><strong>'+region+'</strong>'+
+    changes.map(({id,before,after,outcome})=>
+      '<div><span>'+esc(S.players[id].name)+'</span><b>'+before+'/'+total+' → '+after+'/'+total+'</b>'+
+      (outcome?'<small>'+outcome+'</small>':'')+'</div>'
+    ).join('')+'</section>'
+  ).join('');
+}
+
 function trade(){
   if(!isHuman()||!['roll','end','debt','buy'].includes(S.phase))return;
   const id=S.turn;
   const partners=alive().filter(player=>player!==id);
   if(!partners.length)return;
 
-  const options=player=>'<option value="-1">Mülk seçilmedi</option>'+assets(player)
-    .filter(index=>tradable(index,player))
-    .map(index=>'<option value="'+index+'">'+esc(B[index].name)+(S.props[index].mort?' (ipotekli)':'')+'</option>')
-    .join('');
-  const side=(verb,id,propertyOptions)=>
-    '<section class="trade-side"><h3>'+verb+'</h3>'+
-    '<label for="'+id+'">Mülk</label><select id="'+id+'">'+propertyOptions+'</select>'+
-    '<label class="trade-cash" for="'+id+'Cash">Para (isteğe bağlı)<input id="'+id+'Cash" type="number" min="0" step="1" placeholder="0 ₺"></label></section>';
 
-  modal('<h2>Takas</h2><label for="partner">Kiminle?</label><select id="partner">'+partners.map(player=>
-    '<option value="'+player+'">'+esc(S.players[player].name)+'</option>').join('')+'</select>'+
-    '<div class="trade-grid">'+side('Sen verirsin','give',options(id))+side('Sen alırsın','take','')+'</div>'+
-    '<p class="trade-summary" id="tradeSummary" aria-live="polite"></p><p class="trade-error" id="tradeNote" role="status"></p>'+
+  const choice={otherId:partners[0],give:-1,take:-1};
+  const side=(verb,key)=>
+    '<section class="trade-side"><h3>'+verb+'</h3>'+
+    '<details class="trade-picker" id="'+key+'Picker"><summary id="'+key+'Selected">Mülk seç</summary>'+
+    '<div class="trade-choices" id="'+key+'Choices"></div></details><div class="trade-fact" id="'+key+'Fact"></div>'+
+    '<label class="trade-cash" for="'+key+'Cash">Para (isteğe bağlı)<input id="'+key+'Cash" type="number" min="0" step="1" placeholder="0 ₺"></label></section>';
+
+  modal('<h2>Takas</h2><fieldset class="trade-partner"><legend>Kiminle?</legend><div id="tradePartners"></div></fieldset>'+
+    '<div class="trade-grid">'+side('Sen verirsin','give')+side('Sen alırsın','take')+'</div>'+
+    '<div class="trade-impact" id="tradeImpact" aria-live="polite" hidden></div>'+
+    '<p class="trade-summary" id="tradeSummary"></p><p class="trade-error" id="tradeNote" role="status"></p>'+
     '<div class="actions"><button class="primary" id="offer">Teklif gönder</button><button id="cancel">Vazgeç</button></div>');
 
   const describe=(property,cash)=>[property>=0?B[property].name:'',cash>0?money(cash):''].filter(Boolean).join(' + ')||'Hiçbir şey';
-  const read=()=>({
-    otherId:+$('partner').value,give:+$('give').value,take:+$('take').value,
-    giveCash:+$('giveCash').value,takeCash:+$('takeCash').value
-  });
+  const read=()=>({...choice,giveCash:+$('giveCash').value,takeCash:+$('takeCash').value});
+
+  function paintChoices(key,owner){
+    const property=choice[key];
+    $(key+'Selected').textContent=property<0?'Mülk seç':B[property].name;
+    const container=$(key+'Choices');
+    const choices=[-1,...assets(owner).filter(index=>tradable(index,owner))];
+    container.replaceChildren(...choices.map(index=>{
+      const option=button(index<0?'Mülk ekleme':B[index].name,()=>{
+        choice[key]=index;
+        $(key+'Picker').open=false;
+        paintChoices(key,owner);
+        preview();
+        $(key+'Selected').focus({preventScroll:true});
+      },{render:false});
+      if(index>=0){
+        option.className='trade-option';
+        option.style.setProperty('--district',stripe(B[index]));
+        const detail=document.createElement('small');
+        detail.textContent=districtReport(index).title+' · '+money(B[index].price);
+        option.append(detail);
+      }
+      option.setAttribute('aria-pressed',String(index===property));
+      return option;
+    }));
+    if(choices.length===1){
+      const empty=document.createElement('small');
+      empty.textContent='Takasa uygun tapu yok.';
+      container.append(empty);
+    }
+    const fact=$(key+'Fact');
+    fact.hidden=property<0;
+    if(property>=0){
+      const deed=S.props[property],tile=B[property];
+      const price=money(tile.price)+' liste fiyatı';
+      const currentRent=deed.mort?'İpotekli · kira yok':tile.type==='utility'
+        ? 'Kira: zar toplamı × '+(assets(deed.owner).filter(index=>B[index].type==='utility').length>1?'10':'4')
+        : money(rent(property))+' mevcut kira';
+      fact.style.setProperty('--district',stripe(tile));
+      fact.textContent=districtReport(property).title+' · '+price+' · '+currentRent;
+    }else fact.textContent='';
+  }
+
+  function renderPartners(){
+    const list=$('tradePartners');
+    list.replaceChildren(...partners.map(partner=>{
+      const select=button(S.players[partner].name,()=>{
+        choice.otherId=partner;
+        choice.take=-1;
+        renderPartners();
+        $('takePicker').open=false;
+        paintChoices('take',partner);
+        preview();
+        list.children[partners.indexOf(partner)]?.focus({preventScroll:true});
+      },{render:false});
+      select.setAttribute('aria-pressed',String(partner===choice.otherId));
+      return select;
+    }));
+  }
   function verify(offer){
     const {otherId,give,take,giveCash,takeCash}=offer;
     if(!partners.includes(otherId))return 'Bir rakip seç.';
@@ -1090,16 +1201,18 @@ function trade(){
     const empty=give<0&&take<0&&!giveCash&&!takeCash;
     $('tradeSummary').textContent=empty?'Mülk veya para seçtiğinde teklif burada görünür.':
       describe(give,giveCash)+' verirsin · '+describe(take,takeCash)+' alırsın.';
+    const impact=$('tradeImpact');
+    impact.innerHTML=tradeImpactMarkup(id,offer);
+    impact.hidden=!impact.innerHTML;
     const error=verify(offer);
     $('tradeNote').textContent=empty?'':error;
     $('offer').disabled=!!error;
   }
-  $('partner').onchange=()=>{
-    $('take').innerHTML=options(+$('partner').value);
-    preview();
-  };
-  $('partner').onchange();
-  for(const key of ['give','take','giveCash','takeCash'])$(key).oninput=preview;
+  renderPartners();
+  paintChoices('give',id);
+  paintChoices('take',choice.otherId);
+  preview();
+  for(const key of ['giveCash','takeCash'])$(key).oninput=preview;
   $('cancel').onclick=()=>{close();render()};
   $('offer').onclick=()=>{
     const data=read();
@@ -1131,7 +1244,7 @@ function trade(){
     }
     modal('<h2>'+esc(other.name)+', takas teklifi</h2><p>'+esc(me.name)+
       ' sana <strong>'+esc(describe(give,giveCash))+'</strong> veriyor. Karşılığında <strong>'+
-      esc(describe(take,takeCash))+'</strong> istiyor.</p>'+
+      esc(describe(take,takeCash))+'</strong> istiyor.</p>'+tradeImpactMarkup(otherId,{otherId:id,give:take,take:give})+
       '<div class="actions"><button class="primary" id="yes">Kabul et</button><button id="no">Reddet</button></div>');
     $('yes').onclick=accept;
     $('no').onclick=()=>{close();render()};
