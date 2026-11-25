@@ -386,13 +386,13 @@ button.danger:hover:not(:disabled){background:#ad3943}
 #tradePartners{display:flex;flex-wrap:wrap;gap:5px}
 #tradePartners button[aria-pressed=true],.trade-choices button[aria-pressed=true]{background:#194779;color:#fff;border-color:#123565}
 .trade-picker{margin:8px 0}
-.trade-picker summary{
+.trade-picker summary,.deed-facts summary{
   display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;
   padding:8px 10px;border:1px solid #83a9ce;border-radius:7px;background:#fff;color:#173d7c;font-weight:750;cursor:pointer;
 }
-.trade-picker summary::-webkit-details-marker{display:none}
-.trade-picker summary::after{content:"";flex:none;width:7px;height:7px;border:solid #3c679b;border-width:0 2px 2px 0;transform:rotate(45deg);margin:-4px 2px 0 0}
-.trade-picker[open] summary::after{transform:rotate(225deg);margin-top:4px}
+.trade-picker summary::-webkit-details-marker,.deed-facts summary::-webkit-details-marker{display:none}
+.trade-picker summary::after,.deed-facts summary::after{content:"";flex:none;width:7px;height:7px;border:solid #3c679b;border-width:0 2px 2px 0;transform:rotate(45deg);margin:-4px 2px 0 0}
+.trade-picker[open] summary::after,.deed-facts[open] summary::after{transform:rotate(225deg);margin-top:4px}
 .trade-choices{display:grid;gap:4px;max-height:24vh;overflow:auto;margin-top:4px}
 .trade-choices button{text-align:left}
 .trade-option,.trade-fact{border-left:4px solid var(--district,#417aae)}
@@ -859,6 +859,11 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .deed-list .deed-choice[aria-pressed=true]::after{content:"✓";font-weight:900}
 .deed-detail.is-region{border-top:5px solid var(--deed-color);background:color-mix(in srgb,var(--deed-color) 12%,#fff)}
 .deed-detail-heading,.deed-build-state{display:grid;gap:4px}
+.deed-facts{margin-top:8px}
+.deed-facts summary{padding:6px 8px;font-size:13px}
+.deed-facts .info{margin:8px 0 0}
+.deed-facts dt,.deed-facts dd{margin:0}
+.deed-facts dd{font-weight:750;color:#173d7c;overflow-wrap:anywhere}
 .deed-region-tag{display:flex;align-items:center;gap:6px;font-weight:800}
 .deed-build-state{margin:8px 0;padding:6px 7px;background:#fff9e8;border-radius:6px}
 .deed-build-state small,.deed-action small{font-size:12px;color:#294564}
@@ -2721,7 +2726,47 @@ function confirmDeed(index,title,description,action,refresh){
   });
 }
 function button(label,fn,opts={}){let b=document.createElement('button');b.textContent=label;b.disabled=!!opts.disabled;b.className=opts.kind||'';b.onclick=()=>{if(moving&&!opts.duringMotion)return;fn();if(opts.render!==false&&!blockingOverlay())render()};return b}
-function renderDeed(container,index,refresh){let b=B[index],p=S?.props[index];const region=deedRegion(b);container.classList.toggle('is-region',!!region);if(region)container.style.setProperty('--deed-color',stripe(b));else container.style.removeProperty('--deed-color');let html=`<div class="deed-detail-heading"><strong>${esc(b.name)}</strong>${region?`<small class="deed-region-tag">${region}</small>`:''}</div>`;if(ownable(b)){let owner=p?.owner>=0?esc(S.players[p.owner].name):'Banka';html+=`<div class="info" style="margin-top:8px"><span>Satın alma</span><b>${money(b.price)}</b><span>Sahibi</span><b>${owner}</b><span>İpotek değeri</span><b>${money(b.price/2)}</b>`;if(b.type==='land'){html+=`<span>Ev / otel yapım bedeli</span><b>${money(buildCost(b.g))}</b><span>Boş arsa / tam grup</span><b>${money(landRent(b))} / ${money(landRent(b,0,true))}</b>`;[1,2,3,4,5].forEach(h=>html+=`<span>${h===5?'Otel':h+' ev'}</span><b>${money(landRent(b,h))}</b>`)}else html+=`<span>Kira</span><b>${b.type==='transit'?'25 / 50 / 100 / 200':B.filter(tile=>tile.type==='utility').length>1?'Zar toplamı × 4 / 10':'Zar toplamı × 4'}</b>`;if(p?.owner>=0)html+=`<span>Mevcut kira</span><b>${money(rent(index))}</b>`;html+='</div>'}else html+=`<p class="hint">${({start:'Geç veya üzerine gel: 200 ₺ al.',tax:'Bankaya '+money(b.price||0)+' öde.',jail:'Ziyaret veya tutukluluk.',park:'Ücretsiz dinlenme alanı.',gojail:'Doğrudan cezaevine git.',chance:'Kader kartı çek.',finance:'Kenisel kartı çek.'})[b.type]||''}</p>`;
+function renderDeed(container,index,refresh){
+  const b=B[index],p=S?.props[index];
+  const details=container.querySelector('.deed-facts');
+  const sameDeed=details?.dataset.deedIndex===String(index);
+  const wasOpen=sameDeed&&details.open;
+  const refocusSummary=sameDeed&&document.activeElement===details.firstElementChild;
+  const region=deedRegion(b);
+  container.classList.toggle('is-region',!!region);
+  if(region)container.style.setProperty('--deed-color',stripe(b));
+  else container.style.removeProperty('--deed-color');
+  let html='<div class="deed-detail-heading"><strong>'+esc(b.name)+'</strong>'+
+    (region?'<small class="deed-region-tag">'+esc(region)+'</small>':'')+'</div>';
+
+  if(ownable(b)){
+    const facts=[
+      ['Satın alma',money(b.price)],
+      ['Sahibi',p?.owner>=0?S.players[p.owner].name:'Banka'],
+      ['İpotek değeri',money(b.price/2)]
+    ];
+    if(b.type==='land'){
+      facts.push(['Ev / otel yapım bedeli',money(buildCost(b.g))],
+        ['Boş arsa / tam grup',money(landRent(b))+' / '+money(landRent(b,0,true))]);
+      for(const level of [1,2,3,4,5]){
+        facts.push([level===5?'Otel':level+' ev',money(landRent(b,level))]);
+      }
+    }else{
+      const rate=b.type==='transit'?'25 / 50 / 100 / 200':
+        B.filter(tile=>tile.type==='utility').length>1?'Zar toplamı × 4 / 10':'Zar toplamı × 4';
+      facts.push(['Kira',rate]);
+    }
+    if(p?.owner>=0)facts.push(['Mevcut kira',money(rent(index))]);
+    html+='<details class="deed-facts" data-deed-index="'+index+'"'+(wasOpen?' open':'')+'>'+
+      '<summary>Tapu ayrıntıları</summary><dl class="info">'+
+      facts.map(([label,value])=>'<dt>'+esc(label)+'</dt><dd>'+esc(value)+'</dd>').join('')+
+      '</dl></details>';
+  }else{
+    const description={start:'Geç veya üzerine gel: 200 ₺ al.',tax:'Bankaya '+money(b.price||0)+' öde.',
+      jail:'Ziyaret veya tutukluluk.',park:'Ücretsiz dinlenme alanı.',gojail:'Doğrudan cezaevine git.',
+      chance:'Kader kartı çek.',finance:'Kenisel kartı çek.'};
+    html+='<p class="hint">'+esc(description[b.type]||'')+'</p>';
+  }
   if(b.type==='land'&&p){
     const work=construction.get(index),plan=S?.buildPlans?.[p.owner];
     let state=p.h===5?'Otel tamamlandı':p.h?p.h+' ev var':'Arsa boş';
@@ -2733,6 +2778,7 @@ function renderDeed(container,index,refresh){let b=B[index],p=S?.props[index];co
   }
   if(p?.mort)html+='<p class="deed-status">İpotekli</p>';
   container.innerHTML=html+'<div class="assetbtns"></div>';
+  if(refocusSummary)container.querySelector('.deed-facts summary')?.focus({preventScroll:true});
   const area=container.querySelector('.assetbtns');
   if(!S||!ownable(b))return;
   if(!isHuman()||p?.owner!==S.turn){
