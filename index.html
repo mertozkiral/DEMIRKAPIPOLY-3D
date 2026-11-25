@@ -200,7 +200,9 @@ h1{color:#ffe16b;letter-spacing:.055em;text-shadow:0 2px #703f15}
 header small{color:#e0eeff}
 button,select,input{color:#162c51;background:#e8f3ff;border:1px solid #7ea4cf;border-radius:9px}
 button:hover:not(:disabled){filter:none;background:#f5faff}
-button:focus-visible,summary:focus-visible,select:focus-visible{outline:3px solid #a73b2d;outline-offset:2px}
+button:focus-visible,summary:focus-visible,input:focus-visible{outline:2px solid #2863a2;outline-offset:2px}
+input[type=number]{appearance:textfield;-moz-appearance:textfield}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
 button.primary{color:#38250b;background:#ffd35a;border:1px solid #ae6d18;box-shadow:0 2px #bb7827}
 button.primary:hover:not(:disabled){background:#ffe28d}
 button.danger{color:#fff;background:#982c38;border-color:#6d222a}
@@ -384,7 +386,13 @@ button.danger:hover:not(:disabled){background:#ad3943}
 #tradePartners{display:flex;flex-wrap:wrap;gap:5px}
 #tradePartners button[aria-pressed=true],.trade-choices button[aria-pressed=true]{background:#194779;color:#fff;border-color:#123565}
 .trade-picker{margin:8px 0}
-.trade-picker summary{padding:8px;border:1px solid #83a9ce;border-radius:7px;background:#fff;color:#173d7c;font-weight:750;cursor:pointer}
+.trade-picker summary{
+  display:flex;align-items:center;justify-content:space-between;gap:10px;list-style:none;
+  padding:8px 10px;border:1px solid #83a9ce;border-radius:7px;background:#fff;color:#173d7c;font-weight:750;cursor:pointer;
+}
+.trade-picker summary::-webkit-details-marker{display:none}
+.trade-picker summary::after{content:"";flex:none;width:7px;height:7px;border:solid #3c679b;border-width:0 2px 2px 0;transform:rotate(45deg);margin:-4px 2px 0 0}
+.trade-picker[open] summary::after{transform:rotate(225deg);margin-top:4px}
 .trade-choices{display:grid;gap:4px;max-height:24vh;overflow:auto;margin-top:4px}
 .trade-choices button{text-align:left}
 .trade-option,.trade-fact{border-left:4px solid var(--district,#417aae)}
@@ -891,7 +899,31 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .loan-inbox[hidden]{display:none}
 .loan-inbox p{margin:5px 0 8px;font-size:13px}
 .loan-inbox strong{color:#193d73}
-#loanExact{min-height:30px;margin-top:5px}
+#loanExact{min-height:30px}
+.loan-form{display:grid;gap:9px}
+.loan-form fieldset{min-width:0;margin:0;padding:0;border:0}
+.loan-form legend{margin-bottom:5px;padding:0;color:#173d7c;font-weight:750}
+.loan-lenders{display:grid;gap:5px}
+.loan-lender{
+  display:flex;align-items:center;justify-content:space-between;gap:5px 10px;flex-wrap:wrap;
+  padding:8px 10px;border:1px solid #9bbadd;border-radius:8px;background:#edf6ff;color:#183b6b;
+}
+.loan-lender strong{color:#173d7c;overflow-wrap:anywhere}
+.loan-lender small{color:#395674;font-size:13px;white-space:nowrap}
+.loan-lender-choice{position:relative;display:block}
+.loan-form .loan-lender-choice,.loan-form .loan-amount-label{margin:0}
+.loan-lender-choice input{position:absolute;width:1px;height:1px;min-height:0;opacity:0}
+.loan-lender-choice .loan-lender{cursor:pointer}
+.loan-lender-choice input:checked+.loan-lender{background:#e0edfd;border-color:#2863a2;box-shadow:inset 3px 0 #2863a2}
+.loan-lender-choice input:focus-visible+.loan-lender{outline:2px solid #2863a2;outline-offset:2px}
+.loan-amount-label{display:block;color:#173d7c;font-weight:750}
+.loan-amount-field{position:relative}
+.loan-amount-field input{width:100%;padding-right:38px;font-size:18px;font-weight:700}
+.loan-amount-field span{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:#395674;pointer-events:none}
+.loan-amount-limit{color:#395674;font-size:13px}
+.loan-form #loanExact{justify-self:start;margin:0}
+.loan-form .actions{margin-top:2px}
+.loan-form #loanAmount[aria-invalid=true]{border-color:#aa3d47}
 
 .purchase-cash{
   flex:0 0 100%;display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px 12px;
@@ -1955,29 +1987,56 @@ function loanBlock(id){
 }
 function askForLoan(){
   if(moving||!isHuman()||!['roll','buy','end','debt'].includes(S.phase))return;
-  const borrower=S.turn,reason=loanBlock(borrower);
+  const game=S,borrower=S.turn,reason=loanBlock(borrower);
   if(reason){announceGame('Borç talebi açılamadı',reason);return}
   const due=S.phase==='debt'?S.debt.amount:S.phase==='buy'?B[current().pos].price:0;
   const shortage=Math.max(0,due-current().cash);
+  const candidates=loanCandidates(borrower),lenderRow=id=>
+    '<span class="loan-lender"><strong>'+esc(S.players[id].name)+'</strong><small>'+money(S.players[id].cash)+' nakit</small></span>';
+  const picker=candidates.length===1?'<div role="group" aria-label="Borç alınacak oyuncu">'+lenderRow(candidates[0])+'</div>':
+    '<fieldset><legend>Kimden?</legend><div class="loan-lenders">'+candidates.map((id,index)=>
+      '<label class="loan-lender-choice"><input type="radio" name="loanLender" value="'+id+'"'+(index===0?' checked':'')+'>'+lenderRow(id)+'</label>'
+    ).join('')+'</div></fieldset>';
+
   modal('<h2>Borç iste</h2><p>Faizsiz · Başlangıç’tan sonraki geçişte geri ödenir.</p>'+
-    '<label for="loanLender">Kimden?</label><select id="loanLender">'+loanCandidates(borrower).map(id=>
-      '<option value="'+id+'">'+esc(S.players[id].name)+' · '+money(S.players[id].cash)+' nakit</option>').join('')+'</select>'+
-    '<label for="loanAmount">Tutar (₺)</label><input id="loanAmount" type="number" inputmode="numeric" min="1" step="1" required'+
-    (shortage?' value="'+shortage+'"':'')+'>'+
+    '<form id="loanForm" class="loan-form" novalidate>'+picker+
+    '<label class="loan-amount-label" for="loanAmount">Borç tutarı</label>'+
+    '<div class="loan-amount-field"><input id="loanAmount" type="number" inputmode="numeric" min="1" step="1" required aria-describedby="loanLimit loanNote"'+
+    (shortage?' value="'+shortage+'"':'')+'><span aria-hidden="true">₺</span></div>'+
+    '<small id="loanLimit" class="loan-amount-limit"'+(candidates.length===1?' hidden':'')+'></small>'+
     (shortage?'<button id="loanExact" type="button">Eksik tutar · '+money(shortage)+'</button>':'')+
-    '<p id="loanNote" class="trade-error" role="status"></p><div class="actions"><button id="loanSend" class="primary">Talebi gönder</button>'+
-    '<button id="loanCancel">Vazgeç</button></div>',true);
-  const amount=$('loanAmount'),select=$('loanLender');
-  if($('loanExact'))$('loanExact').onclick=()=>{amount.value=shortage;amount.focus()};
+    '<p id="loanNote" class="trade-error" role="status"></p><div class="actions"><button type="submit" id="loanSend" class="primary">Talebi gönder</button>'+
+    '<button type="button" id="loanCancel">Vazgeç</button></div></form>',true);
+
+  const form=$('loanForm'),amount=$('loanAmount'),note=$('loanNote');
+  const selectedLender=()=>candidates.length===1?candidates[0]:Number(form.querySelector('input[name="loanLender"]:checked')?.value);
+  const clearError=()=>{note.textContent='';amount.removeAttribute('aria-invalid')};
+  function updateLimit(){
+    const available=S.players[selectedLender()]?.cash??0;
+    amount.max=available;
+    $('loanLimit').textContent='En fazla '+money(available);
+    clearError();
+  }
+  updateLimit();
+  form.onchange=event=>{if(event.target.name==='loanLender')updateLimit()};
+  amount.oninput=clearError;
+  if($('loanExact'))$('loanExact').onclick=()=>{amount.value=shortage;clearError();amount.focus()};
   $('loanCancel').onclick=close;
-  $('loanSend').onclick=()=>{
-    if(moving||S.turn!==borrower||loanBlock(borrower)){
-      $('loanNote').textContent='Bu sırada yeni bir borç talebi gönderilemiyor.';
+  form.onsubmit=event=>{
+    event.preventDefault();
+    const lender=selectedLender(),value=Number(amount.value);
+    if(S!==game||moving||S.turn!==borrower||!isHuman()||!['roll','buy','end','debt'].includes(S.phase)||loanBlock(borrower)){
+      note.textContent='Bu sırada yeni bir borç talebi gönderilemiyor.';
       return;
     }
-    const lender=Number(select.value),value=Number(amount.value);
-    if(!loanCandidates(borrower).includes(lender)||!Number.isSafeInteger(value)||value<=0||value>S.players[lender].cash){
-      $('loanNote').textContent='Oyuncunun karşılayabileceği pozitif bir tutar gir.';
+    if(!loanCandidates(borrower).includes(lender)){
+      note.textContent='Bu oyuncu artık borç veremiyor.';
+      return;
+    }
+    if(!Number.isSafeInteger(value)||value<=0||value>S.players[lender].cash){
+      note.textContent='1 ₺ ile '+money(S.players[lender].cash)+' arasında bir tam sayı gir.';
+      amount.setAttribute('aria-invalid','true');
+      amount.focus();
       return;
     }
     (S.loanRequests??(S.loanRequests=[])).push({borrower,lender,amount:value,status:'pending'});
@@ -1985,6 +2044,7 @@ function askForLoan(){
     announceGame('Borç talebi gönderildi',S.players[lender].name+' · '+money(value));
     render();
   };
+  (form.querySelector('input[name="loanLender"]:checked')??amount).focus({preventScroll:true});
 }
 function answerLoan(request,accept){
   if(moving||request.status!=='pending')return;
