@@ -2784,7 +2784,7 @@ function showDeeds(view,focus){
 const districtNames=['Açık mavi','Sarı','Yeşil','Pembe','Lacivert','Kırmızı','Kahverengi','Turuncu'];
 
 function deedRegion(tile){
-  return tile.type==='land'?districtNames[tile.g]+' bölge':tile.type==='transit'?'Ulaşım grubu':tile.type==='utility'?'Hizmet grubu':'';
+  return tile.type==='land'?districtNames[tile.g]+' bölge':tile.type==='transit'?'Okul grubu':tile.type==='utility'?'Hizmet grubu':'';
 }
 function districtReport(index){
   const tile=B[index];
