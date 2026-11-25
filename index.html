@@ -1127,7 +1127,7 @@ function setup(){
   if(S)$('cancelSetup').onclick=()=>{close();render()};
 }
 
-function close(){tradeOpen=false;tradeComposerSeat=null;deedsOpen=false;if(activeDeed?.index!==null&&activeDeed?.index!==undefined)$('tile'+activeDeed.index)?.classList.remove('deed-viewed');activeDeed=null;setDeedButtonExpanded(false);$('overlay').hidden=true;$('overlay').classList.remove('is-deed','is-deed-browser');$('modal').setAttribute('aria-modal','true');$('modal').classList.remove('deed-collapsed');$('modal').style.removeProperty('translate')}
+function close(){tradeOpen=false;tradeComposerSeat=null;deedsOpen=false;if(activeDeed?.index!==null&&activeDeed?.index!==undefined)$('tile'+activeDeed.index)?.classList.remove('deed-viewed');activeDeed=null;setDeedButtonExpanded(false);$('overlay').hidden=true;renderGameUpdate();$('overlay').classList.remove('is-deed','is-deed-browser');$('modal').setAttribute('aria-modal','true');$('modal').classList.remove('deed-collapsed');$('modal').style.removeProperty('translate')}
 function blockingOverlay(){return !S&&!$('overlay').hidden}
 function modal(html,nonblocking=false){
   if(!nonblocking){if(tradeOpen)close();if(deedsOpen)suspendDeeds(S?.turn,false)}
@@ -1138,6 +1138,7 @@ function modal(html,nonblocking=false){
   $('overlay').classList.toggle('is-deed',nonblocking);
   dialog.setAttribute('aria-modal',String(!nonblocking));
   $('overlay').hidden=false;
+  renderGameUpdate();
   if(standard){
     const position=tradeOpen?popupPositions.trade:popupPositions.modal;
     dialog.style.removeProperty('translate');
@@ -2705,6 +2706,7 @@ function decisionKey(){return S?[S.round,S.turn,S.phase,current().pos,S.auction?
 function decisionIsCurrent(){return decisionContext?.game===S&&decisionContext?.key===decisionKey()&&!moving}
 function setDecisionOpen(open){
   $('decisionOverlay').hidden=!open;
+  renderGameUpdate();
   $('gameLayout').inert=open;
   document.querySelector('body > header').inert=open;
 }
@@ -3508,7 +3510,7 @@ function renderRollReady(player){
   return compact;
 }
 
-function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current(),compactRoll=renderRollReady(v);$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderWallet();renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){a.append(purchaseCashSummary(v.cash,B[v.pos].price),button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için diğer oyuncular sırayla teklif verecek. Sen bu açık artırmaya katılamazsın.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(!openingRoll()&&((S.phase==='debt'&&v.cash<S.debt.amount)||(S.phase==='buy'&&v.cash<B[v.pos].price)||S.phase==='end'||S.phase==='roll'))a.append(loanButton());if(!openingRoll()&&['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(compactRoll){const browse=$('resumeDeeds');if(!browse.hidden)a.prepend(button(browse.textContent,returnToBrowsing,{render:false}));$('rollToolsToggle').hidden=!a.childElementCount;if(!a.childElementCount)setRollToolsOpen(false)}}
+function render(){syncBotTimer();renderBoard();renderGameUpdate();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current(),compactRoll=renderRollReady(v);$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderWallet();renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){a.append(purchaseCashSummary(v.cash,B[v.pos].price),button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için diğer oyuncular sırayla teklif verecek. Sen bu açık artırmaya katılamazsın.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(!openingRoll()&&((S.phase==='debt'&&v.cash<S.debt.amount)||(S.phase==='buy'&&v.cash<B[v.pos].price)||S.phase==='end'||S.phase==='roll'))a.append(loanButton());if(!openingRoll()&&['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(compactRoll){const browse=$('resumeDeeds');if(!browse.hidden)a.prepend(button(browse.textContent,returnToBrowsing,{render:false}));$('rollToolsToggle').hidden=!a.childElementCount;if(!a.childElementCount)setRollToolsOpen(false)}}
 
 function botPropertyBudget(index,id,auction=false){
   const tile=B[index],player=S.players[id],report=districtReport(index);
@@ -3607,7 +3609,114 @@ for(const [toggleId,volumeId,channel] of [['musicEnabled','musicVolume','music']
   toggle.onchange=change;
   slider.oninput=change;
 }
-initDice();initBoard();initOrbit();camera();renderBoard();setup();
+const gameUpdateResumeKey='demirkapipoly-update-resume-v1';
+let availableGameUpdate=null, updateETag='', updateCheckedAt=0, checkingGameUpdate=false, applyingGameUpdate=false;
+
+function gamePageSource(doc){
+  if(!doc.querySelector('script[data-game-source]')||!doc.querySelector('#gameLayout'))return null;
+  return Array.from(doc.querySelectorAll(
+    'head > title,head > style,body > header,#gameLayout,#decisionOverlay,body > script[data-game-source],body > script[src^="./"]'
+  ),node=>node.outerHTML).join('\n');
+}
+
+function gameSaveContract(doc){
+  const source=doc.querySelector('script[data-game-source][data-save-format]');
+  if(!source)return null;
+  const declarations=['B','chance','finance','financeVersion','manualSaveKey'].map(name=>{
+    const line=new RegExp('^const '+name+'=.*$','m').exec(source.textContent)?.[0];
+    if(!line||name!=='chance'&&name!=='finance')return line;
+    return line.replace(/(\[\s*)(?:"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*')(?=\s*,\s*['"])/g,'$1');
+  });
+  return declarations.every(Boolean)?JSON.stringify([source.dataset.saveFormat,...declarations]):null;
+}
+
+function canApplyGameUpdate(){
+  if(!availableGameUpdate||applyingGameUpdate)return false;
+  if(!S)return true;
+  if(moving||constructionTurn||!$('overlay').hidden||!$('decisionOverlay').hidden)return false;
+  if(S.phase==='over')return true;
+  return availableGameUpdate.compatible&&(S.phase==='end'||S.phase==='roll'&&!S.extra&&!S.rollShown);
+}
+
+function renderGameUpdate(){
+  const button=$('gameUpdate');
+  button.hidden=!availableGameUpdate;
+  if(!availableGameUpdate)return;
+  const ready=canApplyGameUpdate();
+  button.disabled=!ready;
+  button.textContent=applyingGameUpdate?'Güncelleniyor…':ready?'Güncelleme hazır':
+    availableGameUpdate.compatible?'Güvenli anı bekliyor':'Maç sonunu bekliyor';
+  button.title=ready?'Yeni sürüme geç':availableGameUpdate.compatible?
+    'Zar, işlem veya açık pencere bitince kullanılabilir.':'Yeni sürüm mevcut maçın kurallarıyla uyumlu değil.';
+}
+
+async function checkGameUpdate(){
+  if(document.hidden||checkingGameUpdate||applyingGameUpdate||Date.now()-updateCheckedAt<12000)return;
+  checkingGameUpdate=true;
+  updateCheckedAt=Date.now();
+  try{
+    const response=await fetch(location.pathname,{cache:'no-store',
+      headers:updateETag?{'If-None-Match':updateETag}:{}});
+    if(!response.ok)return;
+    const page=new DOMParser().parseFromString(await response.text(),'text/html');
+    const source=gamePageSource(page);
+    if(!source)return;
+    const contract=gameSaveContract(page);
+    availableGameUpdate=source===loadedGameSource?null:
+      {compatible:!!contract&&contract===loadedSaveContract};
+    updateETag=response.headers.get('ETag')??'';
+    renderGameUpdate();
+  }catch{
+    // A temporary connection failure leaves the game running.
+  }finally{
+    checkingGameUpdate=false;
+  }
+}
+
+function applyGameUpdate(){
+  if(!canApplyGameUpdate())return;
+  if(S&&availableGameUpdate.compatible){
+    const snapshot=gameSnapshot();
+    try{
+      localStorage.setItem(autoSaveKey,JSON.stringify(snapshot));
+      sessionStorage.setItem(gameUpdateResumeKey,JSON.stringify({
+        ...snapshot,saveContract:loadedSaveContract
+      }));
+    }catch{
+      toast('Kayıt alınamadı. Oyun burada devam ediyor.');
+      return;
+    }
+  }
+  applyingGameUpdate=true;
+  renderGameUpdate();
+  location.reload();
+}
+
+function resumeGameUpdate(){
+  let snapshot;
+  try{
+    const pending=JSON.parse(sessionStorage.getItem(gameUpdateResumeKey));
+    if(!pending)return false;
+    if(pending.saveContract===loadedSaveContract)snapshot=readGameSave(gameUpdateResumeKey,sessionStorage);
+    sessionStorage.removeItem(gameUpdateResumeKey);
+  }catch{return false}
+  if(!snapshot)return false;
+  restoreGame(snapshot);
+  toast('Oyun kaldığı yerden açıldı.');
+  return true;
+}
+
+function startGameUpdates(){
+  $('gameUpdate').onclick=applyGameUpdate;
+  document.addEventListener('visibilitychange',checkGameUpdate);
+  window.addEventListener('focus',checkGameUpdate);
+  setInterval(checkGameUpdate,45000);
+  checkGameUpdate();
+}
+
+initDice();initBoard();initOrbit();camera();renderBoard();
+if(!resumeGameUpdate())setup();
+startGameUpdates();
 if(window.createGameScene){
   window.createGameScene({
     canvas:$('meshScene'),stage:$('stage'),board:$('board'),pieces:$('pieces'),dice:$('cubes'),
