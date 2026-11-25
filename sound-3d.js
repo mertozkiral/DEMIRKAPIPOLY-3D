@@ -4,10 +4,14 @@
 window.createToyAudio = function createToyAudio(initial={}) {
   const AudioEngine=window.AudioContext||window.webkitAudioContext;
   const options={music:initial.music!==false,effects:initial.effects!==false,
-    musicVolume:limit(initial.musicVolume,28),effectsVolume:limit(initial.effectsVolume,45)};
+    musicVolume:limit(initial.musicVolume,15),effectsVolume:limit(initial.effectsVolume,28)};
   let context=null,musicBus,effectsBus,noise,active=false,clock=null,beat=0,nextBeat=0;
-  const melody=[0,7,9,7,4,7,12,9,2,5,9,5,4,7,5,2];
-  const bass=[0,0,-3,-3,-5,-5,-2,-2];
+  const phrases=[
+    {chord:[-12,-5,0,4],notes:[7,11]},
+    {chord:[-15,-8,-3,0],notes:[7,4]},
+    {chord:[-17,-10,-5,-1],notes:[2,7]},
+    {chord:[-19,-12,-7,-3],notes:[4,2]}
+  ];
 
   function limit(value,fallback){
     return typeof value==='number'&&Number.isFinite(value)?Math.max(0,Math.min(100,value)):fallback;
@@ -46,8 +50,8 @@ window.createToyAudio = function createToyAudio(initial={}) {
     if(!context)return;
     const visible=!document.hidden;
     const playing=active&&visible&&options.music&&options.musicVolume>0;
-    mix(musicBus,playing?options.musicVolume/100*.44:0);
-    mix(effectsBus,visible&&options.effects?options.effectsVolume/100*.78:0);
+    mix(musicBus,playing?options.musicVolume/100*.32:0);
+    mix(effectsBus,visible&&options.effects?options.effectsVolume/100*.54:0);
     if(playing&&!clock&&context.state==='running'){
       nextBeat=context.currentTime+.075;
       clock=setInterval(sequence,50);
@@ -59,8 +63,8 @@ window.createToyAudio = function createToyAudio(initial={}) {
   }
   function configure(values){
     Object.assign(options,values);
-    options.musicVolume=limit(options.musicVolume,28);
-    options.effectsVolume=limit(options.effectsVolume,45);
+    options.musicVolume=limit(options.musicVolume,15);
+    options.effectsVolume=limit(options.effectsVolume,28);
     sync();
   }
   function setPlaying(playing){
@@ -69,13 +73,13 @@ window.createToyAudio = function createToyAudio(initial={}) {
     if(!active)beat=0;
     sync();
   }
-  function tone(bus,time,start,end,duration,volume,type='sine'){
+  function tone(bus,time,start,end,duration,volume,type='sine',attack=.012){
     const oscillator=context.createOscillator(),envelope=context.createGain();
     oscillator.type=type;
     oscillator.frequency.setValueAtTime(start,time);
     oscillator.frequency.exponentialRampToValueAtTime(Math.max(20,end),time+duration);
     envelope.gain.setValueAtTime(.0001,time);
-    envelope.gain.exponentialRampToValueAtTime(volume,time+Math.min(.012,duration*.22));
+    envelope.gain.exponentialRampToValueAtTime(volume,time+Math.min(attack,duration*.27));
     envelope.gain.exponentialRampToValueAtTime(.0001,time+duration);
     oscillator.connect(envelope);envelope.connect(bus);
     oscillator.start(time);oscillator.stop(time+duration+.012);
@@ -94,19 +98,18 @@ window.createToyAudio = function createToyAudio(initial={}) {
   function sequence(){
     if(context.state!=='running')return;
     if(nextBeat<context.currentTime)nextBeat=context.currentTime+.04;
-    while(nextBeat<context.currentTime+.15){
-      const i=beat%16,time=nextBeat;
-      const pitch=note(261.63,melody[i]);
-      tone(musicBus,time,pitch,pitch*.993,.21,i%4===0?.11:.065,'triangle');
-      if(i%2===0){
-        const low=note(130.81,bass[(i/2)%8]);
-        tone(musicBus,time,low,low,.24,.09);
-      }
-      if(i%4===0)tone(musicBus,time,108,60,.12,.046);
-      else if(i%4===2)cloth(musicBus,time,1000,.045,.038);
-      nextBeat+=i%2===0?.34:.26;
-      beat++;
+    if(nextBeat>=context.currentTime+.15)return;
+    const phrase=phrases[beat%phrases.length],time=nextBeat;
+    for(const degree of phrase.chord){
+      const pitch=note(261.63,degree);
+      tone(musicBus,time,pitch,pitch,3.18,.067,'sine',.65);
     }
+    for(const [index,degree] of phrase.notes.entries()){
+      const pitch=note(261.63,degree);
+      tone(musicBus,time+.7+index*1.25,pitch,pitch,.95,.045,'sine',.11);
+    }
+    nextBeat+=3.1;
+    beat++;
   }
   function canPlay(){
     return !!context&&context.state==='running'&&!document.hidden&&options.effects&&options.effectsVolume>0;
@@ -114,30 +117,26 @@ window.createToyAudio = function createToyAudio(initial={}) {
   function dice(impacts,reduced=false){
     if(!canPlay())return;
     const start=context.currentTime+.012;
-    cloth(effectsBus,start,920,.16,.24);
-    const hits=reduced||!impacts?.length?[{time:.09,speed:180},{time:.17,speed:145}]:impacts;
-    for(const {time,speed} of hits.slice(0,13)){
-      const power=Math.min(1,speed/230);
+    const hits=reduced||!impacts?.length?[{time:.08,speed:140},{time:.17,speed:100}]:impacts;
+    let lastHit=-Infinity;
+    for(const {time,speed} of hits){
+      if(time-lastHit<.09)continue;
+      lastHit=time;
+      const power=Math.min(1,Math.max(0,speed/230));
       const t=start+time;
-      tone(effectsBus,t,152+power*22,54,.095,.10+power*.17);
-      cloth(effectsBus,t,450+power*420,.078,.10+power*.15);
+      tone(effectsBus,t,156+power*18,100,.07,.045+power*.043);
+      cloth(effectsBus,t,380+power*180,.063,.035+power*.037);
     }
   }
-  function hop(step){
+  function hop(){
     if(!canPlay())return;
-    const time=context.currentTime+.007;
-    const pitch=note(278,[0,7,2,9,4,7][(step-1)%6]);
-    tone(effectsBus,time,pitch*.65,pitch,.105,.15,'triangle');
-    cloth(effectsBus,time+.09,630,.045,.080);
+    tone(effectsBus,context.currentTime+.007,185,138,.055,.052);
   }
   function reveal(){
     if(!canPlay())return;
     const time=context.currentTime+.008;
-    [0,4,7,12].forEach((semitone,i)=>{
-      const pitch=note(392,semitone);
-      tone(effectsBus,time+i*.065,pitch,pitch*.99,.26,.17,'triangle');
-    });
-    cloth(effectsBus,time,850,.12,.12);
+    tone(effectsBus,time,330,330,.22,.073,'sine',.029);
+    tone(effectsBus,time+.105,392,392,.28,.068,'sine',.032);
   }
   document.addEventListener('pointerdown',unlock,{passive:true,capture:true});
   document.addEventListener('keydown',unlock,{capture:true});
