@@ -574,23 +574,20 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 @keyframes dice-burst-wave{from{transform:scale(.78);opacity:.85}to{transform:scale(1.65);opacity:0}}
 @media(prefers-reduced-motion:reduce){.dice-burst-card::after{display:none}}
 
+
 .window-topbar,.window-grip{
-  position:relative;cursor:grab;touch-action:none;user-select:none;
-  background:linear-gradient(180deg,#dfedfc,#cee2f8);
-  color:#17396f;border:1px solid #aac4e0;border-radius:9px;
+  position:relative;cursor:grab;touch-action:none;user-select:none;color:#17396f;
 }
-.window-topbar{padding:7px 9px 7px 22px}
-.window-topbar::before{
-  content:"";position:absolute;left:7px;top:50%;transform:translateY(-50%);width:7px;height:17px;
-  background:radial-gradient(circle,#5477a1 1px,transparent 1.6px) 0 0/4px 5px;
+.window-topbar{padding:2px 0 6px 17px;border-bottom:1px solid #b5c9df7f}
+.window-topbar::before,.window-grip::after{
+  content:"";position:absolute;background:radial-gradient(circle,#627c9e 1.15px,transparent 1.7px) 0 0/5px 5px;
+  pointer-events:none;opacity:.78;
 }
-.window-grip{display:block;width:100%;height:19px;margin-bottom:8px}
-.window-grip::after{
-  content:"";position:absolute;left:50%;top:6px;transform:translateX(-50%);
-  width:28px;height:5px;border-block:1px solid #6888ad;
-}
+.window-topbar::before{left:0;top:50%;width:10px;height:15px;transform:translateY(-60%)}
+.window-grip{display:block;width:52px;height:15px;margin:0 auto 2px;border:0;background:transparent}
+.window-grip::after{left:50%;top:3px;width:20px;height:10px;transform:translateX(-50%)}
 .window-topbar:active,.window-grip:active{cursor:grabbing}
-.window-topbar:focus-visible,.window-grip:focus-visible{outline:2px solid #9a4e30;outline-offset:2px}
+.window-topbar:focus-visible,.window-grip:focus-visible{outline:2px solid #496f9a;outline-offset:2px;border-radius:4px}
 .window-topbar h2{min-width:0}
 .game-panel .window-topbar button,.game-settings .window-topbar button{min-height:33px;padding:4px 8px;cursor:pointer}
 .sound-settings{min-width:0;margin:10px 0 6px;border:1px solid #a8c2de;border-radius:9px;padding:5px 9px;background:#eef6ff}
@@ -634,8 +631,8 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .turn-cue-grip:active{cursor:grabbing}
 .turn-cue-grip:focus-visible{outline:2px solid #ffe27d;outline-offset:3px;border-radius:3px}
 .turn-panel{grid-template-rows:auto minmax(0,1fr) auto}
-.turn-panel .turn-panel-grip{height:13px;margin:0 0 5px}
-.turn-panel .turn-panel-grip::after{top:3px}
+.turn-panel .turn-panel-grip{height:13px;margin:0 auto 2px}
+.turn-panel .turn-panel-grip::after{top:1px}
 
 .game-panel{grid-template-rows:auto auto minmax(0,1fr) auto;max-height:calc(100% - 12px)}
 .game-panel>.section{min-height:0;overflow:auto}
@@ -677,7 +674,20 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
   .brief-calculations{grid-template-columns:1fr}
   .brief-calc{padding:6px}
 }
-</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><canvas id="meshScene" class="mesh-scene" aria-hidden="true"></canvas><div class="turn-cue" id="turnCue" hidden><strong class="turn-cue-grip" id="turnCueName" tabindex="0" title="Sıra göstergesini sürükle veya ok tuşlarını kullan"></strong><span id="turnCueAction"></span></div><div class="toast" id="toast" hidden></div><div class="camera"><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun Paneli</button><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="dice-burst" id="diceBurst" role="status" aria-live="polite" aria-atomic="true" hidden><div class="dice-burst-card"><span>Zar sonucu</span><strong id="diceBurstTotal"></strong><span class="dice-burst-equation" id="diceBurstEquation"></span><div class="dice-double-note" id="diceDoubleNote" hidden><b id="diceDoubleTitle"></b><p id="diceDoubleMessage"></p></div></div></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><div class="section turn-panel" id="turnPanel"><div class="window-grip turn-panel-grip" id="turnPanelGrip" tabindex="0" aria-label="Sıra panelini taşı"></div><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><p id="latestMove" class="latest-move" hidden></p><p id="debtBalance" class="debt-balance" hidden></p><div id="gameOutcome" class="game-outcome" hidden></div><section class="auction-summary" id="auctionSummary" hidden aria-label="Açık artırma özeti"></section><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head window-topbar" id="gamePanelGrip" tabindex="0" aria-label="Oyun panelini taşı"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><div class="game-panel-actions"><button id="myDeeds" class="primary">Tapularım</button><button id="seatDelegate" disabled>Bot devralsın</button></div><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><div class="panel-resize" id="gamePanelResize" role="button" tabindex="0" aria-label="Oyun panelinin boyutunu değiştir" title="Sürükle veya ok tuşlarını kullan"></div></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head window-topbar" id="settingsGrip" tabindex="0" aria-label="Ayarları taşı"><h2>Ayarlar</h2><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><fieldset class="sound-settings"><legend>Ses</legend><div class="sound-row"><label><input type="checkbox" id="musicEnabled"> Müzik</label><input id="musicVolume" type="range" min="0" max="100" aria-label="Müzik seviyesi"></div><div class="sound-row"><label><input type="checkbox" id="effectsEnabled"> Efektler</label><input id="effectsVolume" type="range" min="0" max="100" aria-label="Efekt seviyesi"></div></fieldset><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside><aside class="trade-inbox" id="tradeInbox" hidden></aside><aside class="seat-clock" id="seatClock" hidden><span id="seatClockText"></span><button id="seatKeep">Ben devam edeceğim</button></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
+
+.takeover-times{margin-top:9px;padding-top:7px;border-top:1px solid #aac3de}
+.takeover-times[hidden]{display:none}
+.takeover-times>span{display:block;margin-bottom:5px;color:#315a86;font-weight:750;font-size:14px}
+.takeover-times .lobby-pace button{flex:1 1 62px;min-height:34px;font-size:13px}
+
+.overlay.is-deed,.decision-overlay:not([hidden]){backdrop-filter:none}
+.overlay.is-deed .modal:has(.setup-options){width:min(560px,calc(100vw - 18px));max-width:none;max-height:min(77dvh,685px)}
+.settings-tempo{min-width:0;margin:10px 0 6px;padding:6px 9px;border:1px solid #a8c2de;border-radius:9px;background:#eef6ff}
+.settings-tempo legend{padding:0 5px;color:#1e487e;font-weight:800}
+.settings-tempo .lobby-pace button{min-height:34px;flex:1 1 63px;font-size:13px}
+.settings-tempo p{margin:5px 0 0;font-size:12px;color:#315a86}
+.settings-tempo p[hidden]{display:none}
+</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><canvas id="meshScene" class="mesh-scene" aria-hidden="true"></canvas><div class="turn-cue" id="turnCue" hidden><strong class="turn-cue-grip" id="turnCueName" tabindex="0" title="Sıra göstergesini sürükle veya ok tuşlarını kullan"></strong><span id="turnCueAction"></span></div><div class="toast" id="toast" hidden></div><div class="camera"><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun Paneli</button><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="dice-burst" id="diceBurst" role="status" aria-live="polite" aria-atomic="true" hidden><div class="dice-burst-card"><span>Zar sonucu</span><strong id="diceBurstTotal"></strong><span class="dice-burst-equation" id="diceBurstEquation"></span><div class="dice-double-note" id="diceDoubleNote" hidden><b id="diceDoubleTitle"></b><p id="diceDoubleMessage"></p></div></div></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><div class="section turn-panel" id="turnPanel"><div class="window-grip turn-panel-grip" id="turnPanelGrip" tabindex="0" aria-label="Sıra panelini taşı"></div><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><p id="latestMove" class="latest-move" hidden></p><p id="debtBalance" class="debt-balance" hidden></p><div id="gameOutcome" class="game-outcome" hidden></div><section class="auction-summary" id="auctionSummary" hidden aria-label="Açık artırma özeti"></section><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head window-topbar" id="gamePanelGrip" tabindex="0" aria-label="Oyun panelini taşı"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><div class="game-panel-actions"><button id="myDeeds" class="primary">Tapularım</button><button id="seatDelegate" disabled>Bot devralsın</button></div><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><div class="panel-resize" id="gamePanelResize" role="button" tabindex="0" aria-label="Oyun panelinin boyutunu değiştir" title="Sürükle veya ok tuşlarını kullan"></div></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head window-topbar" id="settingsGrip" tabindex="0" aria-label="Ayarları taşı"><h2>Ayarlar</h2><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><fieldset class="settings-tempo"><legend>Oyun temposu</legend><div id="settingsPace" class="number-options lobby-pace"></div><p id="settingsPaceHint" hidden>Yeni tempo sonraki hamlede uygulanacak.</p></fieldset><fieldset class="sound-settings"><legend>Ses</legend><div class="sound-row"><label><input type="checkbox" id="musicEnabled"> Müzik</label><input id="musicVolume" type="range" min="0" max="100" aria-label="Müzik seviyesi"></div><div class="sound-row"><label><input type="checkbox" id="effectsEnabled"> Efektler</label><input id="effectsVolume" type="range" min="0" max="100" aria-label="Efekt seviyesi"></div></fieldset><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside><aside class="trade-inbox" id="tradeInbox" hidden></aside><aside class="seat-clock" id="seatClock" hidden><span id="seatClockText"></span><button id="seatKeep">Ben devam edeceğim</button></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
 <div class="overlay decision-overlay" id="decisionOverlay" hidden><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionText decisionAmount"><div id="decisionGrip" class="window-grip" tabindex="0" aria-label="Onay penceresini taşı"></div><h2 id="decisionTitle"></h2><p id="decisionText"></p><strong id="decisionAmount" hidden></strong><div class="actions"><button id="decisionCancel">Vazgeç</button><button id="decisionYes" class="primary">Eminim</button></div></section></div>
 <script src="./scene-3d.js"></script><script src="./sound-3d.js"></script>
 <script>
@@ -718,12 +728,13 @@ function setup(){
     '<div class="setup-options"><fieldset><legend>Toplam oyuncu</legend><div class="number-options" id="setupCount"></div></fieldset>'+
     '<fieldset><legend>Bilgisayar oyuncusu</legend><div class="number-options" id="setupBots"></div></fieldset>'+
     '<fieldset><legend>Oyun temposu</legend><div id="setupPace" class="number-options lobby-pace"></div></fieldset>'+
-    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked> 1 dakika 30 saniye yanıt gelmezse bot devralsın</label></fieldset></div>'+
+    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked aria-controls="setupTakeoverOptions"> Yanıt gelmezse bot devralsın</label>'+
+    '<div class="takeover-times" id="setupTakeoverOptions"><span>Bekleme süresi</span><div id="setupTakeoverChoices" class="number-options lobby-pace"></div></div></fieldset></div>'+
     '<div id="names" class="setup-names"></div><div class="actions"><button class="primary" id="startBtn">Oyunu başlat</button>'+
     (recent?'<button id="resumeAuto">Son oyuna dön</button>':'')+
     (resume?'<button id="resume">El ile kaydedilen oyunu aç</button>':'')+
     (S?'<button id="cancelSetup">Devam et</button>':'')+'</div>');
-  let count=4,bots=3,chosenPace=paceName;
+  let count=4,bots=3,chosenPace=paceName,chosenTakeover=90;
   const nameDrafts=[];
   function numberChoices(container,values,selected,choose){
     container.replaceChildren(...values.map(value=>{
@@ -739,8 +750,7 @@ function setup(){
     }));
   }
   function renderSetup(){
-    const paces={manual:'Adım adım',normal:'Normal',slow:'Yavaş',slower:'Çok yavaş'};
-    $('setupPace').replaceChildren(...Object.entries(paces).map(([value,label])=>{
+    $('setupPace').replaceChildren(...Object.entries(paceLabels).map(([value,label])=>{
       const choice=document.createElement('button');
       choice.type='button';choice.textContent=label;choice.setAttribute('aria-pressed',String(chosenPace===value));
       choice.onclick=()=>{chosenPace=value;for(const peer of $('setupPace').children)peer.setAttribute('aria-pressed',String(peer===choice))};
@@ -765,6 +775,18 @@ function setup(){
     }
   }
   renderSetup();
+  const autoTakeover=$('setupAutoTakeover');
+  const durations=$('setupTakeoverChoices');
+  for(const [seconds,label] of takeoverOptions){
+    const choice=document.createElement('button');
+    choice.type='button';choice.textContent=label;choice.setAttribute('aria-pressed',String(seconds===chosenTakeover));
+    choice.onclick=()=>{
+      chosenTakeover=seconds;
+      for(const peer of durations.children)peer.setAttribute('aria-pressed',String(peer===choice));
+    };
+    durations.append(choice);
+  }
+  autoTakeover.onchange=()=>{$('setupTakeoverOptions').hidden=!autoTakeover.checked};
   $('startBtn').onclick=()=>{
     if(moving)return;
     const humans=count-bots;
@@ -773,7 +795,7 @@ function setup(){
     lastHuman=0;
     paceName=chosenPace;
     try{localStorage.setItem('demirkapipoly-pace-v2',paceName)}catch{}
-    S={pace:paceName,autoTakeover:$('setupAutoTakeover').checked,
+    S={pace:paceName,autoTakeover:autoTakeover.checked,takeoverSeconds:chosenTakeover,
       models:shuffle(tokenModels.map((_,i)=>i)).slice(0,count),
       players:Array.from({length:count},(_,i)=>({
         name:i<humans?($('name'+i).value.trim()||'Oyuncu '+(i+1)):'Rakip '+(i-humans+1),
@@ -936,6 +958,7 @@ function hopPiece(index,duration){
     {transform:'translateZ(0) scale3d(1,1,1)',offset:1}
   ],{duration,easing:'linear'});
 }
+const paceLabels={manual:'Adım adım',normal:'Normal',slow:'Yavaş',slower:'Çok yavaş'};
 const gamePaces={
   manual:{settle:480,step:620},
   normal:{settle:230,step:225,landing:850,computer:950},
@@ -1535,7 +1558,11 @@ function tradable(i,id){let b=B[i];return S.props[i].owner===id&&(b.type!=='land
 
 let tradeOpen=false,tradeComposerSeat=null,inboxOpen=false,inboxSeat=null,inboxOfferId=null,tradeTimer=null;
 let watchedSeat=null,watchedKey=null,seatDeadline=0,seatTicker=null;
-const takeoverTime=90000;
+const takeoverOptions=[[45,'45 sn'],[60,'1 dk'],[90,'1 dk 30 sn'],[120,'2 dk'],[180,'3 dk']];
+function takeoverDelay(){
+  const seconds=S?.takeoverSeconds;
+  return (takeoverOptions.some(([value])=>value===seconds)?seconds:90)*1000;
+}
 
 function tradeOfferError(offer){
   const {from,to,give,take,giveCash,takeCash}=offer;
@@ -1670,7 +1697,7 @@ function renderTradeInbox(){
     actions.append(button('Kabul et',()=>{resolveTrade(offer,true);inboxOpen=false},{kind:'primary',disabled:!ready}),
       button('Reddet',()=>{resolveTrade(offer,false);inboxOpen=false},{disabled:!ready}));
   }else if(['pending','declined','expired'].includes(offer.status)){
-    actions.append(button('Teklifi düzenle',()=>trade(offer),{render:false,disabled:moving||!['roll','end','debt','buy'].includes(S.phase)}));
+    actions.append(button('Teklifi düzenle',()=>trade(offer),{render:false,disabled:moving||!['roll','end','debt','buy'].includes(S.phase)||!eligibleTradePartners(seat).length}));
   }
   if(!incoming&&offer.status==='pending')actions.append(button('Teklifi geri çek',()=>confirmDecision('Teklif geri çekilsin mi?','Rakip bu teklifi artık kabul edemeyecek.',()=>{
     if(offer.status!=='pending')return;
@@ -1736,7 +1763,7 @@ function startSeatClock(seat,key,onTimeout,duringMotion=false){
   const game=S;
   watchedSeat=seat;
   watchedKey=key;
-  seatDeadline=Date.now()+takeoverTime;
+  seatDeadline=Date.now()+takeoverDelay();
   seatTicker=setInterval(()=>{
     if(S!==game){stopSeatClock();return}
     const left=Math.max(0,Math.ceil((seatDeadline-Date.now())/1000));
@@ -1798,14 +1825,25 @@ function tradeImpactMarkup(player,offer){
   ).join('');
 }
 
+
+function eligibleTradePartners(id){
+  const hasProperty=seat=>assets(seat).some(index=>tradable(index,seat));
+  const mine=hasProperty(id);
+  if(!mine&&S.players[id].cash<=0)return [];
+  return alive().filter(seat=>{
+    if(seat===id)return false;
+    const theirs=hasProperty(seat);
+    return (mine||theirs)&&(theirs||S.players[seat].cash>0);
+  });
+}
 function trade(draft=null){
   if(!isHuman()||!['roll','end','debt','buy'].includes(S.phase)||moving)return;
+  const id=S.turn;
+  const partners=eligibleTradePartners(id);
+  if(!partners.length)return;
   if(deedsOpen)closeDeeds();
   tradeOpen=true;
-  tradeComposerSeat=S.turn;
-  const id=S.turn;
-  const partners=alive().filter(player=>player!==id);
-  if(!partners.length)return;
+  tradeComposerSeat=id;
 
 
   const otherId=draft&&partners.includes(draft.otherId)?draft.otherId:partners[0];
@@ -1885,7 +1923,13 @@ function trade(draft=null){
       return select;
     }));
   }
-  const verify=offer=>tradeOfferError({...offer,from:id,to:offer.otherId});
+  const verify=offer=>{
+    const error=tradeOfferError({...offer,from:id,to:offer.otherId});
+    if(error)return error;
+    if(offer.give<0&&offer.take<0)return 'Takasa en az bir tapu ekle.';
+    if((offer.give<0&&!offer.giveCash)||(offer.take<0&&!offer.takeCash))return 'İki taraf da tapu veya para vermeli.';
+    return '';
+  };
   function preview(){
     const offer=read();
     const {give,take,giveCash,takeCash}=offer;
@@ -2263,9 +2307,38 @@ function renderLandingBrief(){
 function setSettings(open,focus=true){
   $('gameSettings').hidden=!open;
   $('settingsOpen').setAttribute('aria-expanded',String(open));
+  if(open)renderSettingsPace();
   if(focus)(open?$('settingsClose'):$('settingsOpen')).focus({preventScroll:true});
 }
 
+
+
+function changeGamePace(value){
+  if(!S||!Object.hasOwn(gamePaces,value)||value===paceName)return;
+  paceName=value;
+  S.pace=value;
+  try{localStorage.setItem('demirkapipoly-pace-v2',paceName)}catch{}
+  renderSettingsPace();
+  if(!moving){clearBotTimer();render()}
+  toast(moving?'Tempo sonraki hamlede uygulanacak.':'Oyun temposu: '+paceLabels[value]);
+}
+
+function renderSettingsPace(){
+  const row=$('settingsPace');
+  if(row.children.length===0){
+    for(const [value,label] of Object.entries(paceLabels)){
+      const item=document.createElement('button');
+      item.type='button';item.dataset.pace=value;item.textContent=label;
+      item.onclick=()=>changeGamePace(value);
+      row.append(item);
+    }
+  }
+  for(const item of row.children){
+    item.setAttribute('aria-pressed',String(item.dataset.pace===paceName));
+    item.disabled=!S;
+  }
+  $('settingsPaceHint').hidden=!moving;
+}
 
 const popupPositions={modal:{},trade:{},settings:{},decision:{},inbox:{},gamePanel:{},turnCue:{},turnDock:{},turnLanding:{}};
 
@@ -2489,7 +2562,7 @@ function renderPlayers(){
     list.append(item);
   });
 }
-function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();syncSeatDelegate();$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=v.name+' sırası';for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':v.name+' sırası';renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için herkes teklif verebilir.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button('Tapuları yönet',()=>openDeeds(S.turn),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
+function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();syncSeatDelegate();$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=v.name+' sırası';for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':v.name+' sırası';renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için herkes teklif verebilir.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button('Tapuları yönet',()=>openDeeds(S.turn),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
 
 function botPropertyBudget(index,id,auction=false){
   const tile=B[index],player=S.players[id],report=districtReport(index);
@@ -2528,7 +2601,7 @@ window.addEventListener('resize',()=>{
 });
 $('myDeeds').onclick=()=>{if(S)openDeeds(S.players[lastHuman]?.bot?S.turn:lastHuman)};
 $('resumeDeeds').onclick=returnToBrowsing;
-$('seatKeep').onclick=()=>{seatDeadline=Date.now()+takeoverTime;$('seatClock').hidden=true};
+$('seatKeep').onclick=()=>{seatDeadline=Date.now()+takeoverDelay();$('seatClock').hidden=true};
 $('seatDelegate').onclick=()=>{
   const seat=S?deedAttention()?.seat:undefined;
   if(seat===undefined)return;
