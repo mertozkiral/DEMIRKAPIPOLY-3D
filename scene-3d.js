@@ -35,7 +35,7 @@ window.createGameScene = function createGameScene(options) {
   start();
 };
 
-function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, colors, players, angles}) {
+function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, colors, players, angles, properties=()=>[], loc, workFor=()=>null}) {
   const gl = canvas.getContext('webgl', {alpha: true, antialias: true});
   if (!gl || !window.DOMMatrix) return null;
   const vertex = `
@@ -154,7 +154,72 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
     });
   });
 
-  return function renderScene(){
+
+  function propertyBuilding(x,y,isHotel,growth){
+    const h=(isHotel?16:9)*growth;
+    const width=isHotel?13:4.15,depth=isHotel?7:4.1;
+    shadow(x+.5,y+1,.18,width*1.2,depth*1.35);
+    draw(block,at(x,y,h/2),[width,depth,Math.max(.2,h/2)],isHotel?'#ef9260':'#8ac6a9');
+    draw(block,at(x,y,h+.6),[width+.8,depth+.9,isHotel?2.8:1.7],isHotel?'#993e53':'#2e6f73');
+    if(growth>.56){
+      draw(block,at(x,y+depth+.12,h*.42),[isHotel?1.7:1,.45,isHotel?2.2:1.5],'#ffe496',true);
+      if(isHotel)for(const offset of [-7,7]){
+        draw(block,at(x+offset,y+depth+.12,h*.62),[1.4,.45,1.55],'#ffe496',true);
+      }
+    }
+  }
+
+  function worker(x,y,t,direction,index){
+    const run=Math.cos(t*Math.PI*16+index)*.9;
+    const bounce=Math.max(0,run)*1.05;
+    const suit=index===0?'#3077ba':'#3e826b';
+    const root=at(x,y,bounce+1).rotateAxisAngle(0,0,1,direction===1?-19:21);
+    shadow(x,y,.2,4.5,3.4);
+    for(const side of [-1,1]){
+      const step=run*side;
+      draw(block,root.translate(side*1.25,step,2),[.95,1.3,2.2],'#2e3b57');
+      draw(block,root.translate(side*1.3,step+.45,.5),[1,1.6,.6],'#263252');
+    }
+    draw(block,root.translate(0,0,6.25),[2.4,1.6,2.6],suit);
+    const arm=2.5+Math.abs(run)*.45;
+    draw(block,root.translate(direction*arm,1.2,6.9+run),[.75,1.9,.62],suit);
+    draw(block,root.translate(-direction*2.6,-.1,6.6-run),[.72,1.0,1.52],suit);
+    draw(block,root.translate(0,.2,10.1),[1.7,1.45,1.55],'#e4aa80');
+    draw(block,root.translate(0,.33,11.5),[2.22,1.8,.4],'#ffd55a');
+    draw(block,root.translate(0,0,12.1),[1.75,1.55,.7],'#ffd55a');
+    draw(block,root.translate(direction*(arm+.8),2.5,7.2+run),[.8,.45,.8],'#e4a44d');
+  }
+
+  function renderProperties(time){
+    if(!loc)return;
+    properties().forEach((property,index)=>{
+      if(!property.h)return;
+      const [column,row]=loc(index);
+      const tileX=(column-1)*70-490,tileY=(row-1)*70-280;
+      const isHotel=property.h===5,count=isHotel?1:property.h;
+      const event=workFor(index);
+      const t=event&&event.level===property.h?(event.reduced?.65:Math.min(1,Math.max(0,(time-event.at)/event.duration))):1;
+      const progress=event?.reduced?1:Math.max(.06,Math.min(1,(t-.23)/.44));
+      const completed=1-(1-progress)**2;
+      for(let j=0;j<count;j++){
+        propertyBuilding(tileX+(isHotel?20:9+j*10),tileY+52,isHotel,j===count-1?completed:1);
+      }
+      if(t>=1)return;
+      const approach=Math.max(0,1-Math.min(t/.22,(1-t)/.23));
+      worker(tileX+7-7*approach,tileY+62-10*approach,t,1,0);
+      worker(tileX+46+8*approach,tileY+62-12*approach,t,-1,1);
+      if(t>.24&&t<.74){
+        const fade=Math.sin((t-.24)/.5*Math.PI);
+        for(let spark=0;spark<3;spark++){
+          const x=tileX+12+spark*10+(t-.24)*11*(spark-1);
+          const y=tileY+55+Math.sin(t*12+spark)*2;
+          draw(block,at(x,y,4+fade*11),[1.1,1.1,1.1],[1,.79,.39,fade*.75],true);
+        }
+      }
+    });
+  }
+
+  return function renderScene(time){
     const width=stage.clientWidth,height=stage.clientHeight;
     if (!width||!height) return;
     const ratio=Math.min(window.devicePixelRatio||1,1.65);
@@ -175,6 +240,7 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
       for(const pane of windows)draw(block,pane,[2.1,.5,3.1],'#fff0b7',true);
     }
 
+    renderProperties(time);
     const {angle,tilt}=angles();
     players().forEach((player,index)=>{
       const piece=pieces.children[index];
