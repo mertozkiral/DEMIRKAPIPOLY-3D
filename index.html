@@ -953,6 +953,14 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .loan-amount-limit{color:#395674;font-size:13px}
 .loan-form #loanExact{justify-self:start;margin:0}
 .loan-form .actions{margin-top:2px}
+.loan-plan{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.loan-form .loan-plan-choice{position:relative;margin:0}
+.loan-plan-choice input{position:absolute;width:1px;height:1px;min-height:0;opacity:0}
+.loan-plan-choice span{display:block;padding:6px 5px;border:1px solid #a2bddc;border-radius:7px;background:#edf6ff;text-align:center;font-size:13px;cursor:pointer}
+.loan-plan-choice input:checked+span{background:#21579c;color:#fff;border-color:#194678}
+.loan-plan-choice input:focus-visible+span{outline:2px solid #2863a2;outline-offset:2px}
+.loan-plan-preview{color:#254469;font-size:13px;font-weight:700}
+.loan-plan-preview:empty{display:none}
 .loan-form #loanAmount[aria-invalid=true]{border-color:#aa3d47}
 
 .purchase-cash{
@@ -1999,7 +2007,7 @@ function charge(amount,creditor=-1,why='',after='finish'){
     announceGame(player.name+' için '+money(amount)+' borç',reason,'cost');
   }
 }
-function continueAfter(after){if(S.phase==='over')return;if(after?.kind==='playerLoan'){repayPlayerLoan(after.next);return}if(after==='land'){landOn();return}if(after==='jailFee'){charge(50,-1,'Cezaevinden çıkış','land');return}finish()}
+function continueAfter(after){if(S.phase==='over')return;if(after?.kind==='playerLoan'){repayPlayerLoan(after.next);return}if(after?.kind==='loanInstallment'){finishLoanInstallment(after);return}if(after==='land'){landOn();return}if(after==='jailFee'){charge(50,-1,'Cezaevinden çıkış','land');return}finish()}
 function payDebt(){let d=S.debt;if(!d||current().cash<d.amount)return;S.debt=null;charge(d.amount,d.creditor,d.why,d.after)}function declare(){let d=S.debt;if(!d)return;S.debt=null;liquidate(S.turn,d.amount);if(current().cash>=d.amount){charge(d.amount,d.creditor,d.why,d.after);return}if(!bankrupt(S.turn,d.creditor))nextTurn()}
 function arrive(to,after='land'){
   const player=current();
@@ -2066,16 +2074,35 @@ function takeoverDelay(){
 
 
 let loanReplyTimer=null;
+function describeLoanPlan(amount,passes=1){
+  const installment=Math.floor(amount/passes),extra=amount%passes;
+  if(passes===1)return money(amount)+' · İlk Başlangıç geçişinde';
+  const amounts=Array.from({length:passes},(_,index)=>money(installment+Number(index<extra))).join(' + ');
+  return amounts+' · Her Başlangıç geçişinde bir taksit';
+}
+
 function repayPlayerLoan(after){
-  const player=current(),loan=player.privateLoan;
-  delete player.privateLoan;
+  const loan=current().privateLoan;
   if(!loan){continueAfter(after);return}
   const lender=S.players[loan.lender];
-  charge(loan.amount,lender&&!lender.out?loan.lender:-1,'Oyuncu borcu geri ödemesi',after);
+  const amount=Math.ceil(loan.amount/(loan.passesLeft??1));
+  charge(amount,lender&&!lender.out?loan.lender:-1,'Oyuncu borcu taksiti',{kind:'loanInstallment',amount,next:after});
+}
+
+function finishLoanInstallment({amount,next}){
+  const player=current(),loan=player.privateLoan;
+  if(loan){
+    loan.amount-=amount;
+    loan.passesLeft=(loan.passesLeft??1)-1;
+    if(loan.amount<=0)delete player.privateLoan;
+    else log(player.name+' · Kalan borç '+money(loan.amount)+' · '+loan.passesLeft+' taksit.');
+  }
+  continueAfter(next);
 }
 function loanCandidates(id){return alive().filter(seat=>seat!==id&&S.players[seat].cash>0)}
 function loanBlock(id){
-  if(S.players[id].privateLoan)return 'Önce mevcut oyuncu borcunu geri öde.';
+  const loan=S.players[id].privateLoan;
+  if(loan)return 'Kalan borç '+money(loan.amount)+' · '+(loan.passesLeft??1)+' taksit';
   if(S.loanRequests?.some(item=>item.borrower===id&&item.status==='pending'))return 'Bir borç talebi zaten yanıt bekliyor.';
   return loanCandidates(id).length?'':'Borç verebilecek oyuncu yok.';
 }
@@ -2092,19 +2119,28 @@ function askForLoan(){
       '<label class="loan-lender-choice"><input type="radio" name="loanLender" value="'+id+'"'+(index===0?' checked':'')+'>'+lenderRow(id)+'</label>'
     ).join('')+'</div></fieldset>';
 
-  modal('<h2>Borç iste</h2><p>Faizsiz · Başlangıç’tan sonraki geçişte geri ödenir.</p>'+
+  modal('<h2>Borç iste</h2><p>Faizsiz. Ödeme planı karşı taraf kabul edince başlar.</p>'+
     '<form id="loanForm" class="loan-form" novalidate>'+picker+
     '<label class="loan-amount-label" for="loanAmount">Borç tutarı</label>'+
     '<div class="loan-amount-field"><input id="loanAmount" type="number" inputmode="numeric" min="1" step="1" required aria-describedby="loanLimit loanNote"'+
     (shortage?' value="'+shortage+'"':'')+'><span aria-hidden="true">₺</span></div>'+
     '<small id="loanLimit" class="loan-amount-limit"'+(candidates.length===1?' hidden':'')+'></small>'+
     (shortage?'<button id="loanExact" type="button">Eksik tutar · '+money(shortage)+'</button>':'')+
+    '<fieldset><legend>Ödeme planı</legend><div class="loan-plan">'+[1,2,3].map(passes=>
+      '<label class="loan-plan-choice"><input type="radio" name="loanPasses" value="'+passes+'"'+(passes===1?' checked':'')+'><span>'+
+      (passes===1?'Tek ödeme':passes+' taksit')+'</span></label>'
+    ).join('')+'</div></fieldset><small id="loanPlanPreview" class="loan-plan-preview" aria-live="polite"></small>'+
     '<p id="loanNote" class="trade-error" role="status"></p><div class="actions"><button type="submit" id="loanSend" class="primary">Talebi gönder</button>'+
     '<button type="button" id="loanCancel">Vazgeç</button></div></form>',true);
 
   const form=$('loanForm'),amount=$('loanAmount'),note=$('loanNote');
   const selectedLender=()=>candidates.length===1?candidates[0]:Number(form.querySelector('input[name="loanLender"]:checked')?.value);
+  const selectedPasses=()=>Number(form.querySelector('input[name="loanPasses"]:checked').value);
   const clearError=()=>{note.textContent='';amount.removeAttribute('aria-invalid')};
+  function updatePlan(){
+    const value=Number(amount.value),passes=selectedPasses();
+    $('loanPlanPreview').textContent=Number.isSafeInteger(value)&&value>=passes?describeLoanPlan(value,passes):'';
+  }
   function updateLimit(){
     const available=S.players[selectedLender()]?.cash??0;
     amount.max=available;
@@ -2112,13 +2148,17 @@ function askForLoan(){
     clearError();
   }
   updateLimit();
-  form.onchange=event=>{if(event.target.name==='loanLender')updateLimit()};
-  amount.oninput=clearError;
-  if($('loanExact'))$('loanExact').onclick=()=>{amount.value=shortage;clearError();amount.focus()};
+  updatePlan();
+  form.onchange=event=>{
+    if(event.target.name==='loanLender')updateLimit();
+    if(event.target.name==='loanPasses'){clearError();updatePlan()}
+  };
+  amount.oninput=()=>{clearError();updatePlan()};
+  if($('loanExact'))$('loanExact').onclick=()=>{amount.value=shortage;clearError();updatePlan();amount.focus()};
   $('loanCancel').onclick=close;
   form.onsubmit=event=>{
     event.preventDefault();
-    const lender=selectedLender(),value=Number(amount.value);
+    const lender=selectedLender(),value=Number(amount.value),passes=selectedPasses();
     if(S!==game||moving||S.turn!==borrower||!isHuman()||!['roll','buy','end','debt'].includes(S.phase)||loanBlock(borrower)){
       note.textContent='Bu sırada yeni bir borç talebi gönderilemiyor.';
       return;
@@ -2133,7 +2173,13 @@ function askForLoan(){
       amount.focus();
       return;
     }
-    (S.loanRequests??(S.loanRequests=[])).push({borrower,lender,amount:value,status:'pending'});
+    if(value<passes){
+      note.textContent='Her taksit en az 1 ₺ olmalı.';
+      amount.setAttribute('aria-invalid','true');
+      amount.focus();
+      return;
+    }
+    (S.loanRequests??(S.loanRequests=[])).push({borrower,lender,amount:value,passes,status:'pending'});
     recordSeatAction(borrower);close();
     announceGame('Borç talebi gönderildi',S.players[lender].name+' · '+money(value));
     render();
@@ -2142,14 +2188,14 @@ function askForLoan(){
 }
 function answerLoan(request,accept){
   if(moving||request.status!=='pending')return;
-  const {borrower,lender,amount}=request,source=S.players[lender],target=S.players[borrower];
+  const {borrower,lender,amount,passes=1}=request,source=S.players[lender],target=S.players[borrower];
   if(!accept)request.status='declined';
   else if(source.out||target.out||target.privateLoan||source.cash<amount)request.status='expired';
   else{
     request.status='accepted';
     source.cash-=amount;target.cash+=amount;
-    target.privateLoan={lender,amount};
-    log(target.name+', '+source.name+' üzerinden '+money(amount)+' borç aldı.');
+    target.privateLoan={lender,amount,passesLeft:passes};
+    log(target.name+', '+source.name+' üzerinden '+money(amount)+' borç aldı. '+describeLoanPlan(amount,passes)+'.');
   }
   const titles={accepted:'Borç talebi kabul edildi',declined:'Borç talebi reddedildi',expired:'Borç talebi geçersiz'};
   announceGame(titles[request.status],target.name+' · '+money(amount),request.status==='accepted'?'gain':'info');
@@ -2164,11 +2210,13 @@ function renderLoanRequests(){
   if(request){
     const title=document.createElement('strong'),detail=document.createElement('p'),actions=document.createElement('div');
     title.textContent=S.players[request.lender].name+' · Borç talebi';
-    detail.textContent=S.players[request.borrower].name+' '+money(request.amount)+' istiyor. Başlangıç’tan geçince geri ödeyecek.';
+    detail.textContent=S.players[request.borrower].name+' '+money(request.amount)+' istiyor.';
+    const terms=document.createElement('p');
+    terms.textContent=describeLoanPlan(request.amount,request.passes??1);
     actions.className='actions';
     actions.append(button('Kabul et',()=>answerLoan(request,true),{kind:'primary',disabled:moving||S.phase==='auction'}),
       button('Reddet',()=>answerLoan(request,false),{disabled:moving}));
-    panel.append(title,detail,actions);
+    panel.append(title,detail,terms,actions);
   }
   if(loanReplyTimer||!S.loanRequests?.some(item=>item.status==='pending'&&S.players[item.lender].bot))return;
   const game=S;
@@ -3247,7 +3295,7 @@ function renderTurnCue(){
 function playerPortfolioStatus(id){
   const owned=assets(id);
   const fullDistricts=districtNames.filter((_,region)=>complete(id,region)).length;
-  return owned.length+' tapu'+(fullDistricts?' · '+fullDistricts+' tam bölge':'')+(S.players[id].privateLoan?' · '+money(S.players[id].privateLoan.amount)+' borç':'');
+  return owned.length+' tapu'+(fullDistricts?' · '+fullDistricts+' tam bölge':'')+(S.players[id].privateLoan?' · '+money(S.players[id].privateLoan.amount)+' borç · '+(S.players[id].privateLoan.passesLeft??1)+' taksit':'');
 }
 
 
@@ -3419,7 +3467,7 @@ $('promptRoll').onclick=roll;$('saveBtn').onclick=save;$('newBtn').onclick=setup
 <h3>Binalar</h3><p>Bir renk grubundaki tüm arsalara sahipseniz ve hiçbirisi ipotekli değilse tapu senedindeki ev bedelini bankaya ödeyerek ev kurabilirsiniz. Aynı renk grubundaki her arsada birer ev olmadan ikinci; ikişer ev olmadan üçüncü; üçer ev olmadan dördüncü evi kuramazsınız. Her arsaya en fazla dört ev kurabilirsiniz. Grubun her arsasında dörder ev olduğunda otelin bedelini ödeyip dört evi bankaya verin. Arsaya yalnız bir otel kurulur; yanında ev kurulamaz.</p><p><b>Bina sıkıntısı (masa oyunu):</b> Birden fazla oyuncu son evi veya oteli isterse bankacı 10 TL'den açık artırma başlatır. Her oyuncu sıraya bağlı olmadan en az 1 TL artırarak teklif verebilir. Bedel bankaya ödenir. Bina kalmadıysa satışla stok açılana kadar beklenir.</p>
 <h3>Anlaşmalar</h3><p>Mülkler nakit, diğer mülkler veya ücretsiz çıkış kartları karşılığında karşılıklı belirlenen değerlerle satılabilir ve takas edilebilir. Renk grubunda bina varsa önce tamamını bankaya satın. İpotekli mülkün yeni sahibi ipoteği hemen kaldırır (ipotek bedeli + %10) veya ipoteği koruyup yalnız %10 bedeli bankaya öder.</p>
 <h3>Yardım edin, param kalmadı!</h3><p>Ödemeye nakit yetmezse bina satın veya mülk ipotek edin. Oteli alış fiyatının yarısına bankaya satın ve dört evi geri alın. Evleri alış fiyatının yarısına ve dengeli biçimde satın. İpotek edilecek arsanın grubundaki tüm binaları önce yarı fiyatına bankaya satın. Tapuyu ters çevirip ipotek bedelini alın. Kaldırmak için ipotek bedeli ve %10 faiz ödeyin. İpotekli mülkten kira alınmaz; tamamına sahip olduğunuz grubun ipoteksiz arsalarından iki kat kira alınır. İpoteksiz istasyon, iskele ve kamu kuruluşları da hak ettikleri yüksek kirayı almaya devam eder.</p>
-<h3>Kredi ve takip</h3><p>Bir oyuncunun aynı anda en fazla bir banka kredisi olabilir; en çok 300 TL, %20 faiz. Başlangıçtan her geçiş kredi kartında işaretlenir. Üçüncü geçişte 200 TL alınır ve kredi ödenir. Vade uzatılmaz, yeni banka kredisiyle eski kredi kapatılmaz. Ödeme için bina satışı, ipotek, gerekirse iflas. Fiziksel baskı için 10 tekrar kullanılabilir takip kartı önerilir.</p>
+<h3>Kredi ve takip</h3><p>Oyuncular faizsiz borç için tek ödeme, iki ya da üç taksit önerebilir. Karşı taraf kabul ederse Başlangıç’tan her geçişte bir ödeme yapılır.</p><p>Bir oyuncunun aynı anda en fazla bir banka kredisi olabilir; en çok 300 TL, %20 faiz. Başlangıçtan her geçiş kredi kartında işaretlenir. Üçüncü geçişte 200 TL alınır ve kredi ödenir. Vade uzatılmaz, yeni banka kredisiyle eski kredi kapatılmaz. Ödeme için bina satışı, ipotek, gerekirse iflas. Fiziksel baskı için 10 tekrar kullanılabilir takip kartı önerilir.</p>
 <h3>İflas ve oyun sonu</h3><p>Fon yaratmanıza rağmen borç devam ediyorsa iflas edin. Oyuncuya borçluysanız ücretsiz çıkış kartınız ve kalan mülkler alacaklıya devredilir. Yeni malik ipoteği kaldırır veya %10 bedeli öder. Bankaya borçluysanız mülkleri bankaya iade edin; ipotekleri kaldırılıp açık artırmaya çıkarılır. Ücretsiz çıkış kartı ilgili destenin altına konur. İflas etmeyen son oyuncu kazanır.</p>
 <h3>Kenisel kartları</h3><p>Şu ana kadar dikte edilen 12 kart etkin; 18 kartlık hedef destenin kalan altısı henüz girilmedi. Kader destesi mevcut haliyle korunuyor.</p><ol><li>Finale çıktın, tüm oyunculardan 10 TL topla.</li><li>Cezadan ücretsiz çık. Bu kart satılabilir veya saklanabilir.</li><li>Anneannen kredi çekti, 100 TL al.</li><li>Belediye kömürlerini sattın, 100 TL al.</li><li>Okulun önünde piyiz yapılacak, 100 TL öde.</li><li>Başlangıç noktasına ilerle, 200 TL al.</li><li>Başlangıç noktasına ilerle, 200 TL al.</li><li>Doğru kaleye gir, başlangıç noktasından geçme, 200 TL alma.</li><li>Altı Atak'ta skoru bildin, 200 TL al.</li><li>Fakir paran yattı, 20 TL al.</li><li>Sweet Bonanza'dan 50 TL kazandın.</li><li>Başlangıç noktasına ilerle, 200 TL al.</li></ol><p><b>Dijital sürüm notu:</b> Son bina açık artırması, ipotekli takasta faiz seçimi ve ücretsiz çıkış kartının takası ile bankaya iflasta mülklerin otomatik açık artırılması henüz tam uygulanmamıştır. Masa oyunu kuralları yukarıda tam olarak belirtilmiştir.</p><button id="closeRules" class="primary">Kapat</button>`);$('closeRules').onclick=()=>{close();render()}};$('camL').onclick=()=>{angle-=12;camera()};$('camR').onclick=()=>{angle+=12;camera()};$('camFlat').onclick=()=>{tilt=tilt?0:30;if(!tilt)angle=0;camera()};$('camReset').onclick=showWholeBoard;$('camIn').onclick=()=>adjustZoom(1.25);$('camOut').onclick=()=>adjustZoom(.8);$('camFollow').onclick=toggleFollow;new ResizeObserver(camera).observe($('stage'));$('gamePanelOpen').onclick=()=>{if(S)setGamePanel($('gamePanel').hidden)};
 $('gamePanelClose').onclick=()=>setGamePanel(false);
