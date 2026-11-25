@@ -898,8 +898,8 @@ function setup(){
     '<div class="setup-options"><fieldset><legend>Toplam oyuncu</legend><div class="number-options" id="setupCount"></div></fieldset>'+
     '<fieldset><legend>Bilgisayar oyuncusu</legend><div class="number-options" id="setupBots"></div></fieldset>'+
     '<fieldset><legend>Oyun temposu</legend><div id="setupPace" class="number-options lobby-pace"></div></fieldset>'+
-    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked aria-controls="setupTakeoverOptions"> Etkileşim olmazsa bot daha erken devralsın</label>'+
-    '<div class="takeover-times" id="setupTakeoverOptions"><span>Bekleme süresi</span><div id="setupTakeoverChoices" class="number-options lobby-pace"></div></div><p class="takeover-safety">Fare, dokunma ve klavye süreyi yeniler. Etkileşim yoksa en geç 5 dakikada bot devralır.</p></fieldset></div>'+
+    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked aria-controls="setupTakeoverOptions"> Etkileşim olmazsa bot devralsın</label>'+
+    '<div class="takeover-times" id="setupTakeoverOptions"><span>Bekleme süresi</span><div id="setupTakeoverChoices" class="number-options lobby-pace"></div></div><p class="takeover-safety">Açıkken fare, dokunma ve klavye süreyi yeniler. Kapalıyken bot insan oyuncuların koltuğunu devralmaz.</p></fieldset></div>'+
     '<div id="names" class="setup-names"></div><div class="actions"><button class="primary" id="startBtn">Oyunu başlat</button>'+
     (recent?'<button id="resumeAuto">Son oyuna dön</button>':'')+
     (resume?'<button id="resume">El ile kaydedilen oyunu aç</button>':'')+
@@ -1856,13 +1856,10 @@ function tradable(i,id){let b=B[i];return S.props[i].owner===id&&(b.type!=='land
 
 let tradeOpen=false,tradeComposerSeat=null,inboxOpen=false,inboxSeat=null,inboxOfferId=null,tradeTimer=null;
 let watchedSeat=null,watchedKey=null,seatDeadline=0,seatTicker=null,refreshSeatClock=null;
-const maximumSeatWait=5*60*1000;
 const takeoverOptions=[[45,'45 sn'],[60,'1 dk'],[90,'1 dk 30 sn'],[120,'2 dk'],[180,'3 dk']];
 function takeoverDelay(){
   const seconds=S?.takeoverSeconds;
-  if(S?.autoTakeover!==true)return maximumSeatWait;
-  const configured=(takeoverOptions.some(([value])=>value===seconds)?seconds:90)*1000;
-  return Math.min(configured,maximumSeatWait);
+  return (takeoverOptions.some(([value])=>value===seconds)?seconds:90)*1000;
 }
 
 
@@ -1962,6 +1959,9 @@ function openBankLoan(){
   function update(){const n=Number(input.value);submit.disabled=!Number.isInteger(n)||n<1||n>300;$('bankLoanTotal').textContent=submit.disabled?'1–300 TL arasında tutar gir.':'Geri ödeme: '+money(Math.round(n*1.2))}
   input.oninput=update;update();$('bankLoanCancel').onclick=()=>{close();render()};
   submit.onclick=()=>{const n=Number(input.value);if(S.turn!==id||bankLoanBlock()||!Number.isInteger(n)||n<1||n>300)return;v.cash+=n;v.loan=Math.round(n*1.2);v.loanPasses=0;log(v.name+' '+money(n)+' banka kredisi çekti.');close();render()};
+}
+function openingRoll(){
+  return S.round===1&&S.phase==='roll'&&!S.rollShown&&current().pos===0;
 }
 function loanButton(){
   const reason=loanBlock(S.turn),control=button('Borç iste',askForLoan,{disabled:!!reason,render:false});
@@ -2138,7 +2138,8 @@ function stopSeatClock(){
 }
 
 function delegateSeat(seat){
-  const player=S?.players[seat];
+  if(S?.autoTakeover!==true)return;
+  const player=S.players[seat];
   if(!player||player.bot||player.out)return;
   player.bot=true;
   S.waitingSeat=null;
@@ -2181,6 +2182,10 @@ function trackSeatActivity(event){
 
 function startSeatClock(seat,key,onTimeout,duringMotion=false){
   stopSeatClock();
+  if(S.autoTakeover!==true){
+    S.waitingSeat=null;
+    return;
+  }
   const game=S,now=Date.now(),previous=S.waitingSeat;
   const since=previous?.seat===seat&&previous.key===key&&Number.isFinite(previous.since)&&
     previous.since<=now?previous.since:now;
@@ -3122,7 +3127,7 @@ function renderPlayers(){
   });
   list.scrollTop=previousScroll;
 }
-function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){if(v.cash<B[v.pos].price){const tip=document.createElement('small');tip.className='buy-shortage';tip.textContent='Satın almak için '+money(B[v.pos].price-v.cash)+' eksiğin var.';a.append(tip)}a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için herkes teklif verebilir.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if((S.phase==='debt'&&current().cash<S.debt.amount)||(S.phase==='buy'&&current().cash<B[current().pos].price)||S.phase==='end'||S.phase==='roll')a.append(loanButton());if(['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
+function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){if(v.cash<B[v.pos].price){const tip=document.createElement('small');tip.className='buy-shortage';tip.textContent='Satın almak için '+money(B[v.pos].price-v.cash)+' eksiğin var.';a.append(tip)}a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için herkes teklif verebilir.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(!openingRoll()&&((S.phase==='debt'&&v.cash<S.debt.amount)||(S.phase==='buy'&&v.cash<B[v.pos].price)||S.phase==='end'||S.phase==='roll'))a.append(loanButton());if(!openingRoll()&&['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
 
 function botPropertyBudget(index,id,auction=false){
   const tile=B[index],player=S.players[id],report=districtReport(index);
