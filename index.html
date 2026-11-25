@@ -897,8 +897,8 @@ function setup(){
     '<div class="setup-options"><fieldset><legend>Toplam oyuncu</legend><div class="number-options" id="setupCount"></div></fieldset>'+
     '<fieldset><legend>Bilgisayar oyuncusu</legend><div class="number-options" id="setupBots"></div></fieldset>'+
     '<fieldset><legend>Oyun temposu</legend><div id="setupPace" class="number-options lobby-pace"></div></fieldset>'+
-    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked aria-controls="setupTakeoverOptions"> Yanıt gelmezse bot daha erken devralsın</label>'+
-    '<div class="takeover-times" id="setupTakeoverOptions"><span>Bekleme süresi</span><div id="setupTakeoverChoices" class="number-options lobby-pace"></div></div><p class="takeover-safety">Bir sıra en fazla 5 dakika hamle bekler.</p></fieldset></div>'+
+    '<fieldset><legend>Bot devralma</legend><label class="takeover-option"><input id="setupAutoTakeover" type="checkbox" checked aria-controls="setupTakeoverOptions"> Etkileşim olmazsa bot daha erken devralsın</label>'+
+    '<div class="takeover-times" id="setupTakeoverOptions"><span>Bekleme süresi</span><div id="setupTakeoverChoices" class="number-options lobby-pace"></div></div><p class="takeover-safety">Fare, dokunma ve klavye süreyi yeniler. Etkileşim yoksa en geç 5 dakikada bot devralır.</p></fieldset></div>'+
     '<div id="names" class="setup-names"></div><div class="actions"><button class="primary" id="startBtn">Oyunu başlat</button>'+
     (recent?'<button id="resumeAuto">Son oyuna dön</button>':'')+
     (resume?'<button id="resume">El ile kaydedilen oyunu aç</button>':'')+
@@ -2133,7 +2133,7 @@ function delegateSeat(seat){
   finishDecision(false,false);
   if(tradeOpen)close();
   log(player.name+' koltuğunu bilgisayar devraldı.');
-  announceGame(player.name+' koltuğunu bot devraldı','Bekleme süresinde hamle gelmedi.');
+  announceGame(player.name+' koltuğunu bot devraldı','Bekleme süresinde ekran etkinliği görülmedi.');
   if(manualWait?.seat===seat)manualWait.advance();
   if(!moving)render();
 }
@@ -2142,11 +2142,28 @@ function delegateSeat(seat){
 
 
 function recordSeatAction(seat){
-  if(!S||S.players[seat]?.bot||watchedSeat!==seat||!S.waitingSeat)return;
+  if(!S||seat===null||!seatTicker||S.players[seat]?.bot||watchedSeat!==seat||S.waitingSeat?.seat!==seat)return;
   const since=Date.now();
   S.waitingSeat.since=since;
   seatDeadline=since+takeoverDelay();
-  $('seatClock').hidden=true;
+  if(!$('seatClock').hidden)$('seatClock').hidden=true;
+}
+
+let lastPointerPosition=null,lastActivityCheckpoint=0;
+function trackSeatActivity(event){
+  if(!event.isTrusted||document.hidden)return;
+  if(event.type==='pointermove'){
+    const next=[event.clientX,event.clientY];
+    if(lastPointerPosition?.[0]===next[0]&&lastPointerPosition?.[1]===next[1])return;
+    lastPointerPosition=next;
+  }
+  if(watchedSeat===null||!seatTicker)return;
+  recordSeatAction(watchedSeat);
+  const now=Date.now();
+  if(!moving&&now-lastActivityCheckpoint>=5000){
+    lastActivityCheckpoint=now;
+    checkpointGame();
+  }
 }
 
 function startSeatClock(seat,key,onTimeout,duringMotion=false){
@@ -2163,7 +2180,7 @@ function startSeatClock(seat,key,onTimeout,duringMotion=false){
     const left=Math.max(0,Math.ceil((seatDeadline-Date.now())/1000));
     const canAdvance=(!moving||duringMotion)&&!buildingThisTurn();
     $('seatClock').hidden=left>12||!canAdvance;
-    $('seatClockText').textContent=S.players[seat].name+' · Bot '+left+' sn sonra devralır';
+    $('seatClockText').textContent=S.players[seat].name+' · Hareketsizlik: bot '+left+' sn sonra devralır';
     if(!left&&canAdvance){
       stopSeatClock();
       onTimeout();
@@ -3131,7 +3148,15 @@ window.addEventListener('resize',()=>{
 });
 $('myDeeds').onclick=()=>{if(S)openDeeds(S.players[lastHuman]?.bot?S.turn:lastHuman)};
 $('resumeDeeds').onclick=returnToBrowsing;
-document.addEventListener('visibilitychange',()=>{if(!document.hidden)refreshSeatClock?.()});
+for(const type of ['pointermove','pointerdown','click','wheel','touchmove','keydown']){
+  document.addEventListener(type,trackSeatActivity,{capture:true,passive:true});
+}
+document.addEventListener('visibilitychange',()=>{
+  lastPointerPosition=null;
+  if(document.hidden)checkpointGame();
+  else refreshSeatClock?.();
+});
+window.addEventListener('pagehide',checkpointGame);
 document.addEventListener('keydown',event=>{
   if((event.key==='Enter'||event.code==='NumpadEnter')&&!event.repeat&&S&&S.phase==='roll'&&isHuman()&&!moving&&!blockingOverlay()){
     if(!event.target.closest?.('input,textarea,select,button,summary,[contenteditable=true]')||event.target===$('promptRoll')){
