@@ -530,7 +530,36 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .offer-pager span{font-size:14px;font-weight:750;color:#254979}
 
 .turn-panel .die[hidden]{display:none}
-</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><canvas id="meshScene" class="mesh-scene" aria-hidden="true"></canvas><div class="turn-cue" id="turnCue" hidden><strong id="turnCueName"></strong><span id="turnCueAction"></span></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><output id="rollResult" aria-live="polite"></output><button id="diceGrip" class="popup-grip" aria-label="Zar sonucunu taşı" hidden>✥</button><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><div class="camera"><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun Paneli</button><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><p id="latestMove" class="latest-move" hidden></p><p id="debtBalance" class="debt-balance" hidden></p><div id="gameOutcome" class="game-outcome" hidden></div><section class="auction-summary" id="auctionSummary" hidden aria-label="Açık artırma özeti"></section><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><div class="game-panel-actions"><button id="myDeeds" class="primary">Tapularım</button><button id="seatDelegate">Bot devralsın</button></div><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head"><h2>Ayarlar</h2><button id="settingsGrip" class="panel-grip" aria-label="Ayarları taşı">✥</button><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><details class="section history" open><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside><aside class="trade-inbox" id="tradeInbox" hidden></aside><aside class="seat-clock" id="seatClock" hidden><span id="seatClockText"></span><button id="seatKeep">Ben devam edeceğim</button></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
+
+.dice-burst{
+  position:absolute;z-index:37;inset:0;display:grid;place-items:center;
+  pointer-events:none;isolation:isolate;
+}
+.dice-burst[hidden]{display:none}
+.dice-burst-card{
+  position:relative;display:grid;justify-items:center;gap:3px;
+  padding:18px 36px 22px;min-width:min(220px,68vw);
+  border:4px solid #ffd46e;border-radius:25px;background:#153872;color:#fff3c9;
+  box-shadow:0 10px 0 #b3523e,0 20px 34px #182c5f78;
+  animation:dice-burst-card 3s cubic-bezier(.2,.7,.25,1) both;
+}
+.dice-burst-card::before{
+  content:"";position:absolute;inset:-48%;z-index:-1;
+  background:radial-gradient(ellipse,#ffe685bf,transparent 70%);
+  clip-path:polygon(50% 0,57% 28%,75% 6%,72% 34%,96% 20%,81% 42%,100% 50%,81% 58%,96% 80%,72% 66%,75% 94%,57% 72%,50% 100%,43% 72%,25% 94%,28% 66%,4% 80%,19% 58%,0 50%,19% 42%,4% 20%,28% 34%,25% 6%,43% 28%);
+  animation:dice-burst-rays .64s ease-out both;
+}
+.dice-burst-card span{font-weight:850;font-size:clamp(15px,3vw,22px);letter-spacing:.04em}
+.dice-burst-card strong{font-variant-numeric:tabular-nums;font-size:clamp(82px,18vw,172px);line-height:.92;color:#ffe16d;text-shadow:0 5px #a63e36}
+@keyframes dice-burst-card{
+  0%{transform:scale(.38) rotate(-7deg);opacity:.25}
+  13%{transform:scale(1.09) rotate(2deg);opacity:1}
+  21%,92%{transform:scale(1);opacity:1}
+  100%{transform:scale(.97);opacity:0}
+}
+@keyframes dice-burst-rays{from{transform:scale(.5);opacity:.9}to{transform:scale(1.4);opacity:0}}
+@media(prefers-reduced-motion:reduce){.dice-burst-card,.dice-burst-card::before{animation:none}.dice-burst-card::before{display:none}}
+</style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout"><div class="left"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><canvas id="meshScene" class="mesh-scene" aria-hidden="true"></canvas><div class="turn-cue" id="turnCue" hidden><strong id="turnCueName"></strong><span id="turnCueAction"></span></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="dice-burst" id="diceBurst" aria-hidden="true" hidden><div class="dice-burst-card"><span>Zar toplamı</span><strong id="diceBurstTotal"></strong></div></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><output id="rollResult" aria-live="polite"></output><button id="diceGrip" class="popup-grip" aria-label="Zar sonucunu taşı" hidden>✥</button><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="toast" id="toast" hidden></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><div class="camera"><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun Paneli</button><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button><label class="pace-control" for="gamePace">Tempo <select id="gamePace"><option value="manual" selected>Adım adım</option><option value="normal">Normal</option><option value="slow">Yavaş</option><option value="slower">Çok yavaş</option></select></label></div></div><div class="section turn-panel" id="turnPanel"><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><p id="latestMove" class="latest-move" hidden></p><p id="debtBalance" class="debt-balance" hidden></p><div id="gameOutcome" class="game-outcome" hidden></div><section class="auction-summary" id="auctionSummary" hidden aria-label="Açık artırma özeti"></section><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><div class="game-panel-actions"><button id="myDeeds" class="primary">Tapularım</button><button id="seatDelegate">Bot devralsın</button></div><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head"><h2>Ayarlar</h2><button id="settingsGrip" class="panel-grip" aria-label="Ayarları taşı">✥</button><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><details class="section history" open><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside><aside class="trade-inbox" id="tradeInbox" hidden></aside><aside class="seat-clock" id="seatClock" hidden><span id="seatClockText"></span><button id="seatKeep">Ben devam edeceğim</button></aside></main><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
 <div class="overlay decision-overlay" id="decisionOverlay" hidden><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionText"><button id="decisionGrip" class="popup-grip" aria-label="Onay penceresini taşı">✥</button><h2 id="decisionTitle"></h2><p id="decisionText"></p><div class="actions"><button id="decisionCancel">Vazgeç</button><button id="decisionYes" class="primary">Eminim</button></div></section></div>
 <script src="./scene-3d.js"></script>
 <script>
@@ -778,9 +807,9 @@ function hopPiece(index,duration){
 }
 const gamePaces={
   manual:{settle:480,step:620},
-  normal:{settle:230,dice:900,step:225,landing:850,computer:950},
-  slow:{settle:430,dice:1500,step:380,landing:1450,computer:1750},
-  slower:{settle:650,dice:2200,step:530,landing:2150,computer:2600}
+  normal:{settle:230,step:225,landing:850,computer:950},
+  slow:{settle:430,step:380,landing:1450,computer:1750},
+  slower:{settle:650,step:530,landing:2150,computer:2600}
 };
 let paceName='manual';
 try{
@@ -1165,7 +1194,7 @@ function simulateDice(){
   return best;
 }
 
-async function showDice(player,result,pace,manual){
+async function showDice(player,result,manual){
   const overlay=$('rollOverlay'),tray=$('cubes');
   const [first,second]=result.values;
   overlay.hidden=false;
@@ -1197,8 +1226,12 @@ async function showDice(player,result,pace,manual){
   $('diceGrip').hidden=false;
   overlay.classList.add('dice-reveal');
   movePopup(overlay,popupPositions.dice,popupPositions.dice.x??0,popupPositions.dice.y??0);
-  if(manual)await waitForContinue('diceContinue',overlay,'is-waiting');
-  else await pause(pace.dice);
+  const banner=$('diceBurst');
+  $('diceBurstTotal').textContent=String(first+second);
+  banner.hidden=false;
+  const reveal=pause(3000).finally(()=>{banner.hidden=true});
+  if(manual)await Promise.all([reveal,waitForContinue('diceContinue',overlay,'is-waiting')]);
+  else await reveal;
   overlay.hidden=true;
   tray.hidden=true;
   diceCamera=null;
@@ -1236,7 +1269,7 @@ async function roll(){
 
   try{
     await pause(pace.settle);
-    await showDice(player.name,throwResult,pace,manual);
+    await showDice(player.name,throwResult,manual);
     focusOn(previous,500);
     S.dice=[first,second];
     S.rollShown=true;
@@ -1275,6 +1308,7 @@ async function roll(){
     else if(!manual||player.bot)await pause(pace.landing??gamePaces.slow.landing);
   }finally{
     $('rollOverlay').hidden=true;
+    $('diceBurst').hidden=true;
     $('cubes').hidden=true;
     diceCamera=null;
     stage.style.removeProperty('--piece-speed');
