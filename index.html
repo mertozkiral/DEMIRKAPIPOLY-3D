@@ -506,6 +506,22 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 
 .auction-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0}
 .auction-summary[hidden]{display:none}
+.left:has(.turn-panel.is-auction)::after{content:"";position:absolute;inset:0;z-index:44;background:#1026458c}
+.turn-panel.is-auction{
+  top:50%;bottom:auto;left:50%;z-index:46;transform:translate(-50%,-50%);
+  width:min(calc(100% - 24px),580px);max-height:76%;padding:12px;
+  background:#edf5ff;border:1px solid #a7c2e2;text-align:left;
+}
+.turn-panel.is-auction .turn-panel-grip,.turn-panel.is-auction .turntitle,.turn-panel.is-auction .dice,
+.turn-panel.is-auction #message,.turn-panel.is-auction #resumeDeeds,.turn-panel.is-auction #cardpop{display:none}
+.turn-panel.is-auction .actions{background:transparent}
+.auction-heading{grid-column:1/-1}
+.auction-heading h2{margin:0;font-size:clamp(21px,3vw,28px);color:#163d7c}
+.auction-heading p{margin:4px 0;color:#3f5578;font-size:14px}
+.auction-seats{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:5px;margin:3px 0;padding:0;list-style:none}
+.auction-seats li{padding:5px 8px;border-radius:7px;background:#dceafa;color:#24486b;font-size:13px;overflow-wrap:anywhere}
+.auction-seats li[aria-current=true]{background:#fff0ba;color:#573e14}
+@media(max-width:600px){.turn-panel.is-auction{padding:8px;max-height:84%}}
 .auction-summary details{grid-column:1/-1;padding:3px 6px;color:#1b416d}
 .auction-summary details p{margin:3px 0}
 .auction-summary>div{display:grid;gap:2px;align-content:start;padding:7px;border:1px solid #a5bfdf;border-radius:8px;background:#f7fbff;color:#1b416d}
@@ -1061,6 +1077,7 @@ function load(key=manualSaveKey){
   landingTile=Number.isInteger(savedTile)&&B[savedTile]?savedTile:
     ['buy','auction','end','debt'].includes(S.phase)?selected:null;
   landingCharge=snapshot.charge;
+  if(S.phase==='auction')restoreAuction();
   close();
   render();
 }
@@ -1837,9 +1854,30 @@ function draw(type){let deck=type==='chance'?chance:finance, pile=S[type];if(!pi
 function applyRoll(d1,d2){const v=current(),same=d1===d2;S.dice=[d1,d2];S.card=null;log(`${v.name} zar attı: ${d1} ve ${d2}.`);if(v.jailed){v.jail++;S.extra=false;if(same){v.jailed=false;v.jail=0;moveTo((v.pos+d1+d2)%40);return}if(v.jail>=3){v.jailed=false;v.jail=0;arrive((v.pos+d1+d2)%40,'jailFee');return}phase('end');S.msg='Çift zar gelmedi. Cezaevinde kalıyorsun.';return}S.doubles=same?S.doubles+1:0;S.extra=same;if(S.doubles===3){goJail();return}moveTo((v.pos+d1+d2)%40)}
 function jailExit(card){let v=current();if(S.phase!=='roll'||!v.jailed)return;if(card){if(!v.free)return;v.free--}else{if(v.cash<50)return;v.cash-=50}v.jailed=false;v.jail=0;recordSeatAction(S.turn);log(`${v.name} cezaevinden çıktı.`);S.msg='Zar atabilirsin.'}
 function buy(){if(S.phase!=='buy')return;let i=current().pos,b=B[i];if(current().cash<b.price)return;current().cash-=b.price;S.props[i].owner=S.turn;log(`${current().name}, ${b.name} mülkünü ${money(b.price)} karşılığında aldı.`);announceGame(current().name+' tapu aldı',b.name+' · '+money(b.price),'gain');finish()}
-function auctionStart(){if(S.phase!=='buy')return;let order=alive();let start=order.indexOf(S.turn);order=[...order.slice(start),...order.slice(0,start)];S.auction={i:current().pos,bid:0,high:-1,order,at:0,passed:[]};phase('auction');auctionCheck()}
+function auctionStart(){
+  if(S.phase!=='buy')return;
+  const seats=alive(),starter=seats.indexOf(S.turn);
+  const order=[...seats.slice(starter+1),...seats.slice(0,starter)];
+  S.auction={i:current().pos,bid:0,high:-1,order,at:0,passed:[]};
+  phase('auction');
+  auctionCheck();
+}
+function restoreAuction(){
+  const auction=S.auction,starter=auction.order.indexOf(S.turn);
+  if(starter<0)return;
+  auction.order.splice(starter,1);
+  auction.at=auction.order.length?(auction.at-Number(starter<auction.at))%auction.order.length:0;
+  auction.passed=auction.passed.filter(id=>id!==S.turn);
+  auction.history=auction.history?.filter(entry=>entry.id!==S.turn);
+  if(auction.high===S.turn){
+    const previous=auction.history?.findLast(entry=>!auction.passed.includes(entry.id));
+    auction.high=previous?.id??-1;
+    auction.bid=previous?.amount??0;
+  }
+  auctionCheck();
+}
 function auctionCheck(){let a=S.auction,eligible=a.order.filter(i=>!a.passed.includes(i));if(!eligible.length||(eligible.length===1&&a.high===eligible[0])){if(a.high>=0){S.players[a.high].cash-=a.bid;S.props[a.i].owner=a.high;log(`${S.players[a.high].name} açık artırmada ${B[a.i].name} mülkünü ${money(a.bid)} bedelle aldı.`);announceGame(S.players[a.high].name+' açık artırmayı kazandı',B[a.i].name+' · '+money(a.bid),'gain')}else log('Açık artırmada teklif verilmedi.');S.auction=null;finish();return}for(let z=0;z<a.order.length;z++){let id=a.order[a.at];if(!a.passed.includes(id)&&id!==a.high){S.msg=`Açık artırma: ${B[a.i].name}. Sıra ${S.players[id].name}.`;return}a.at=(a.at+1)%a.order.length}}
-function auctionAct(amount){if(S.phase!=='auction')return;let a=S.auction,id=a.order[a.at];if(amount===null)a.passed.push(id);else{amount=Math.floor(amount);if(!Number.isFinite(amount)||amount<a.bid+1||amount>S.players[id].cash)return;a.bid=amount;a.high=id;(a.history??(a.history=[])).push({id,amount});if(a.history.length>12)a.history.shift();log(`${S.players[id].name}: ${money(amount)} teklif verdi.`)}a.at=(a.at+1)%a.order.length;auctionCheck()}
+function auctionAct(amount){if(S.phase!=='auction')return;let a=S.auction,id=a.order[a.at];if(id===S.turn||!S.players[id])return;if(amount===null)a.passed.push(id);else{amount=Math.floor(amount);if(!Number.isFinite(amount)||amount<a.bid+1||amount>S.players[id].cash)return;a.bid=amount;a.high=id;(a.history??(a.history=[])).push({id,amount});if(a.history.length>12)a.history.shift();log(`${S.players[id].name}: ${money(amount)} teklif verdi.`)}a.at=(a.at+1)%a.order.length;auctionCheck()}
 function nextTurn(){if(S.phase==='over'||finishAfterConstruction(nextTurn))return;let old=S.turn;for(let i=1;i<=S.players.length;i++){let j=(old+i)%S.players.length;if(!S.players[j].out){S.turn=j;if(j<=old)S.round++;break}}S.phase='roll';S.rollShown=false;S.doubles=0;S.extra=false;S.card=null;S.debt=null;S.msg='Zar atarak turuna başla.';selected=current().pos;landingTile=null;landingCharge=null;showProgress('');if(follow)focusOn(selected);else camera();resumeAfterTurn(old);runBuildPlan()}
 
 function tradable(i,id){let b=B[i];return S.props[i].owner===id&&(b.type!=='land'||group(b.g).every(j=>!S.props[j].h))}
@@ -2729,9 +2767,10 @@ function turnPanelPosition(){
 }
 function placeTurnPanel(){
   const dock=$('turnPanel'),landing=dock.classList.contains('is-landing');
-  const layout=landing?'landing':'dock';
+  const layout=dock.classList.contains('is-auction')?'auction':landing?'landing':'dock';
   if(dock.dataset.windowLayout===layout)return;
   dock.dataset.windowLayout=layout;
+  if(layout==='auction'){dock.style.removeProperty('translate');return;}
   const view=turnPanelPosition(),x=view.x??0,y=view.y??0;
   dock.style.removeProperty('translate');
   view.x=0;
@@ -2741,9 +2780,11 @@ function placeTurnPanel(){
 
 function renderLandingBrief(){
   const panel=$('landingBrief');
-  const report=landingTile===null?null:districtReport(landingTile);
+  const auction=S?.phase==='auction';
+  const report=auction||landingTile===null?null:districtReport(landingTile);
   panel.hidden=!report;
   const dock=$('turnPanel');
+  dock.classList.toggle('is-auction',auction);
   dock.classList.toggle('is-landing',!!report&&(moving||S.phase!=='roll'));
   dock.classList.toggle('is-purchase',!!report&&S.phase==='buy');
   if(!report){
@@ -3052,9 +3093,16 @@ function renderAuction(actions){
   const min=auction.bid+1, price=B[auction.i].price;
   const summary=$('auctionSummary');
   summary.hidden=false;
-  summary.innerHTML='<div><small>En yüksek teklif</small><strong>'+(auction.high<0?'—':money(auction.bid))+'</strong><span>'+esc(leader)+'</span></div>'+
+  const seats=auction.order.map(seat=>{
+    const status=seat===id?'Sırası':seat===auction.high?'Önde':auction.passed.includes(seat)?'Çekildi':'Bekliyor';
+    return '<li'+(seat===id?' aria-current="true"':'')+'><b>'+esc(S.players[seat].name)+'</b> · '+status+'</li>';
+  }).join('');
+  summary.innerHTML='<header class="auction-heading"><h2>Açık artırma · '+esc(B[auction.i].name)+'</h2><p>'+
+    esc(current().name)+' başlattı. Diğer oyuncular sırayla teklif verir veya çekilir.</p></header>'+
+    '<div><small>En yüksek teklif</small><strong>'+(auction.high<0?'—':money(auction.bid))+'</strong><span>'+esc(leader)+'</span></div>'+
     '<div><small>Teklif sırası</small><strong>'+esc(bidder.name)+'</strong><span>'+money(bidder.cash)+' nakit</span></div>'+
     '<div><small>Bankanın liste fiyatı</small><strong>'+money(price)+'</strong><span>'+esc(B[auction.i].name)+'</span></div>'+
+    '<ul class="auction-seats" aria-label="Teklif sırası">'+seats+'</ul>'+
     (auction.history?.length?'<details><summary>Son teklifler</summary>'+auction.history.slice(-5).reverse().map(entry=>'<p>'+esc(S.players[entry.id].name)+' · '+money(entry.amount)+'</p>').join('')+'</details>':'');
   $('message').textContent='Açık artırma';
   if(bidder.bot){showComputerAction(actions,bidder.name+' teklif sırası');return}
@@ -3077,9 +3125,8 @@ function renderAuction(actions){
   balance.className='auction-balance';
   const submit=button('Teklif ver',()=>{
     if(!input.reportValidity())return;
-    const offer=+input.value;
-    confirmDecision('Teklif verilsin mi?',B[auction.i].name+' için '+money(offer)+' teklif edeceksin. Kazanırsan '+money(bidder.cash-offer)+' paran kalacak.',()=>auctionAct(offer));
-  },{kind:'primary',render:false});
+    auctionAct(+input.value);
+  },{kind:'primary'});
   function showBalance(){
     const value=+input.value;
     const valid=input.value!==''&&Number.isSafeInteger(value)&&value>=min&&value<=bidder.cash;
@@ -3100,7 +3147,7 @@ function renderAuction(actions){
     }));
   }
   entry.append(balance);
-  actions.append(entry,submit,button('Çekil',()=>confirmDecision('Açık artırmadan çekilmek istiyor musun?','Bu tapu için tekrar teklif veremeyeceksin.',()=>auctionAct(null)),{render:false}));
+  actions.append(entry,submit,button('Çekil',()=>auctionAct(null)));
   showBalance();
 }
 
@@ -3117,7 +3164,7 @@ function renderPlayers(){
   });
   list.scrollTop=previousScroll;
 }
-function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){if(v.cash<B[v.pos].price){const tip=document.createElement('small');tip.className='buy-shortage';tip.textContent='Satın almak için '+money(B[v.pos].price-v.cash)+' eksiğin var.';a.append(tip)}a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için herkes teklif verebilir.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(!openingRoll()&&((S.phase==='debt'&&v.cash<S.debt.amount)||(S.phase==='buy'&&v.cash<B[v.pos].price)||S.phase==='end'||S.phase==='roll'))a.append(loanButton());if(!openingRoll()&&['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
+function render(){syncBotTimer();renderBoard();if(!S)return;gameSound?.setPlaying(S.phase!=='over');if(!$('gameSettings').hidden)renderSettingsPace();if(!$('decisionOverlay').hidden&&!decisionIsCurrent())finishDecision(false,false);for(const id of ['startBtn','resume','resumeAuto'])if($(id))$(id).disabled=moving;renderTurnCue();if(tradeOpen&&tradeComposerSeat!==S.turn)close();expireObsoleteTradeOffers();renderTradeInbox();renderLoanRequests();scheduleTradeResponses();if(!moving)watchHumanSeat();if(S.phase==='over')camera();refreshDeedPriority();let v=current();$('turnPanel').dataset.phase=S.phase;$('turnPanel').classList.toggle('has-turn-priority',!moving&&!!deedAttention()?.human);$('turnPrompt').hidden=moving||v.bot||S.phase!=='roll';$('promptPlayer').textContent=turnLabel(v.name);for(const id of ['saveBtn','newBtn','rulesBtn'])$(id).disabled=moving;if(!v.bot)lastHuman=S.turn;renderPlayers();$('turntitle').textContent=S.phase==='over'?'Oyun bitti':turnLabel(v.name);renderDiceSummary();$('message').textContent=S.msg;$('cardpop').innerHTML=S.card?`<div class="cardpop ${S.card.type}"><strong>${S.card.type==='chance'?'Kader':'Kenisel'}</strong><p>${esc(S.card.label)}</p></div>`:'';$('log').innerHTML=S.log.map(t=>`<div>${esc(t)}</div>`).join('');renderLandingBrief();checkpointGame();renderOutcome();if(S.phase!=='auction')auctionDraft=null;$('auctionSummary').hidden=moving||S.phase!=='auction';let a=$('actions');a.innerHTML='';if(moving)return;if(S.phase==='over'){a.append(button('Yeni oyun',setup,{kind:'primary'}));return}if(S.phase==='auction'){renderAuction(a);return}if(v.bot){if(paceName!=='manual')a.append(Object.assign(document.createElement('span'),{className:'hint',textContent:'Bilgisayar oynuyor…'}));showComputerAction(a,v.name+(S.phase==='roll'?' zar atsın':' hamlesine devam et'));return}if(S.phase==='roll'){if(v.jailed){a.append(button('50 ₺ öde',()=>confirmDecision('Cezaevinden çıkılsın mı?','Çıkmak için 50 ₺ ödenecek.',()=>jailExit(false)),{disabled:v.cash<50}),button('Çıkış kartı',()=>confirmDecision('Çıkış kartı kullanılsın mı?','Bir cezaevinden çıkış kartı harcanacak.',()=>jailExit(true)),{disabled:!v.free}))}}else if(S.phase==='buy'){if(v.cash<B[v.pos].price){const tip=document.createElement('small');tip.className='buy-shortage';tip.textContent='Satın almak için '+money(B[v.pos].price-v.cash)+' eksiğin var.';a.append(tip)}a.append(button('Satın al · '+money(B[v.pos].price),()=>confirmDecision('Satın almak istiyor musun?',B[v.pos].name+' tapusu senin olacak.',buy,{amount:B[v.pos].price}),{kind:'primary',disabled:v.cash<B[v.pos].price}),button('Açık artırma',()=>confirmDecision('Açık artırma başlasın mı?',B[v.pos].name+' için diğer oyuncular sırayla teklif verecek. Sen bu açık artırmaya katılamazsın.',auctionStart)))}else if(S.phase==='end'){a.append(button('Turu bitir',nextTurn,{kind:'primary'}))}else if(S.phase==='debt'){a.append(button('Borcu öde',()=>confirmDecision('Borç ödensin mi?',money(S.debt.amount)+' ödenecek.',payDebt),{kind:'primary',disabled:v.cash<S.debt.amount}),button(assets(S.turn).some(i=>canSell(i))?'Bina sat / tapuları yönet':'Tapuları yönet',()=>openDeeds(S.turn,assets(S.turn).find(i=>canSell(i))??null),{render:false}),button('İflas / tasfiye',()=>confirmDecision('Tasfiye başlasın mı?',money(S.debt.amount)+' borcu kapatmak için varlıkların elden çıkarılacak. Borç karşılanamazsa iflas edersin.',declare),{kind:'danger'}))}if(!openingRoll()&&((S.phase==='debt'&&v.cash<S.debt.amount)||(S.phase==='buy'&&v.cash<B[v.pos].price)||S.phase==='end'||S.phase==='roll'))a.append(loanButton());if(!openingRoll()&&['roll','buy','end','debt'].includes(S.phase)){const reason=bankLoanBlock();a.append(button('Banka kredisi',openBankLoan,{disabled:!!reason,render:false}));if(v.loan){const tracking=document.createElement('div');tracking.className='hint';tracking.style.width='100%';tracking.textContent='Kredi: '+money(v.loan)+' · '+(v.loanPasses??2)+'/3 Başlangıç geçişi';a.append(tracking)}}if(eligibleTradePartners(S.turn).length)a.append(button('Takas',trade));if(v.free||v.discount||v.permit){let s=document.createElement('div');s.className='hint';s.style.width='100%';s.textContent=`Kartlar: ${v.free} çıkış · ${v.discount} kira indirimi · ${v.permit} imar izni`;a.append(s)}}
 
 function botPropertyBudget(index,id,auction=false){
   const tile=B[index],player=S.players[id],report=districtReport(index);
@@ -3131,7 +3178,7 @@ function botPropertyBudget(index,id,auction=false){
 
 function botStep(){if(moving||!S||buildingThisTurn()||blockingOverlay()||S.phase==='over')return;clearBotTimer();if(S.phase==='auction'){let a=S.auction,id=a.order[a.at],v=S.players[id],cap=botPropertyBudget(a.i,id,true);let amount=a.bid+Math.max(1,Math.min(10,cap-a.bid));auctionAct(cap>=a.bid+1?amount:null);render();return}let v=current();if(!v.bot)return;if(S.phase==='roll'){if(v.jailed&&(v.free||v.cash>350))jailExit(!!v.free);roll()}else if(S.phase==='buy'){let b=B[v.pos];if(botPropertyBudget(v.pos,S.turn)>=b.price)buy();else auctionStart()}else if(S.phase==='debt'){liquidate(S.turn,S.debt.amount);if(v.cash>=S.debt.amount)payDebt();else declare()}else if(S.phase==='end'){for(let i of assets(S.turn)){if(v.cash>releaseCost(i)+300&&S.props[i].mort)unmortgage(i);if(canBuild(i)&&v.cash>buildCost(B[i].g)+300){build(i);break}}nextTurn()}render()}
 $('promptRoll').onclick=roll;$('saveBtn').onclick=save;$('newBtn').onclick=setup;$('rulesBtn').onclick=()=>{modal(`<h2>DEMİRKAPİPOLY · Oyun kuralları</h2>
-<h3>Başlangıç ve özel alanlar</h3><p>2–6 oyuncu, kişi başı 1.500 TL. Sırayla iki zar atılır. Başlangıçtan geçildiğinde 200 TL alınır. Sahipsiz mülkü satın alın veya açık artırmaya çıkarın. Rakip mülkünde kira ödeyin.</p><p><b>Okulun Önü:</b> Tekrar sıra size gelene kadar bu alanda bekleyin.</p><p><b>Ziyaretçi:</b> Cezaevindekilere ziyaretçisiniz, korkmanıza gerek yok. Ziyaretçi alanına piyonunuzu koyun ve bir sonraki turda oyuna devam edin.</p><p>Çift zar tekrar oynatır; üst üste üç çift cezaevi. Cezaevinden 50 TL, ücretsiz çıkış kartı veya çift zar ile çıkılır; üçüncü başarısız zar sonunda 50 TL ödenir.</p>
+<h3>Başlangıç ve özel alanlar</h3><p>2–6 oyuncu, kişi başı 1.500 TL. Sırayla iki zar atılır. Başlangıçtan geçildiğinde 200 TL alınır. Sahipsiz mülkü satın alın veya açık artırmaya çıkarın. Açık artırmayı başlatan oyuncu teklif veremez. Diğer oyuncular sırayla teklif verir veya çekilir. Rakip mülkünde kira ödeyin.</p><p><b>Okulun Önü:</b> Tekrar sıra size gelene kadar bu alanda bekleyin.</p><p><b>Ziyaretçi:</b> Cezaevindekilere ziyaretçisiniz, korkmanıza gerek yok. Ziyaretçi alanına piyonunuzu koyun ve bir sonraki turda oyuna devam edin.</p><p>Çift zar tekrar oynatır; üst üste üç çift cezaevi. Cezaevinden 50 TL, ücretsiz çıkış kartı veya çift zar ile çıkılır; üçüncü başarısız zar sonunda 50 TL ödenir.</p>
 <h3>Binalar</h3><p>Bir renk grubundaki tüm arsalara sahipseniz ve hiçbirisi ipotekli değilse tapu senedindeki ev bedelini bankaya ödeyerek ev kurabilirsiniz. Aynı renk grubundaki her arsada birer ev olmadan ikinci; ikişer ev olmadan üçüncü; üçer ev olmadan dördüncü evi kuramazsınız. Her arsaya en fazla dört ev kurabilirsiniz. Grubun her arsasında dörder ev olduğunda otelin bedelini ödeyip dört evi bankaya verin. Arsaya yalnız bir otel kurulur; yanında ev kurulamaz.</p><p><b>Bina sıkıntısı (masa oyunu):</b> Birden fazla oyuncu son evi veya oteli isterse bankacı 10 TL'den açık artırma başlatır. Her oyuncu sıraya bağlı olmadan en az 1 TL artırarak teklif verebilir. Bedel bankaya ödenir. Bina kalmadıysa satışla stok açılana kadar beklenir.</p>
 <h3>Anlaşmalar</h3><p>Mülkler nakit, diğer mülkler veya ücretsiz çıkış kartları karşılığında karşılıklı belirlenen değerlerle satılabilir ve takas edilebilir. Renk grubunda bina varsa önce tamamını bankaya satın. İpotekli mülkün yeni sahibi ipoteği hemen kaldırır (ipotek bedeli + %10) veya ipoteği koruyup yalnız %10 bedeli bankaya öder.</p>
 <h3>Yardım edin, param kalmadı!</h3><p>Ödemeye nakit yetmezse bina satın veya mülk ipotek edin. Oteli alış fiyatının yarısına bankaya satın ve dört evi geri alın. Evleri alış fiyatının yarısına ve dengeli biçimde satın. İpotek edilecek arsanın grubundaki tüm binaları önce yarı fiyatına bankaya satın. Tapuyu ters çevirip ipotek bedelini alın. Kaldırmak için ipotek bedeli ve %10 faiz ödeyin. İpotekli mülkten kira alınmaz; tamamına sahip olduğunuz grubun ipoteksiz arsalarından iki kat kira alınır. İpoteksiz istasyon, iskele ve kamu kuruluşları da hak ettikleri yüksek kirayı almaya devam eder.</p>
