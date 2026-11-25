@@ -375,7 +375,6 @@ button.danger:hover:not(:disabled){background:#ad3943}
 
 .turn-panel.has-turn-priority{z-index:44}
 
-.decision-overlay{z-index:160}
 .decision-overlay .modal{width:min(410px,100%)}
 .decision-overlay .modal .actions{justify-content:flex-end}
 .decision-overlay .modal .actions button{flex:0 1 auto}
@@ -492,17 +491,14 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 #overlay.is-deed{z-index:40}
 #overlay.is-deed .modal{max-width:min(440px,calc(100vw - 16px))}
 .decision-overlay:not([hidden]){
-  justify-content:flex-end;align-items:flex-start;pointer-events:none;
-  background:none;padding:84px 12px 12px;z-index:46;
+  position:fixed;inset:0;z-index:160;justify-content:center;align-items:center;
+  padding:12px;background:#10264585;
 }
 .decision-overlay .modal{
-  pointer-events:auto;width:min(405px,calc(100vw - 20px));
-  max-height:45dvh;border-color:#ffcb58;background:#fff8e9;
+  width:min(410px,100%);max-height:calc(100dvh - 24px);
+  border-color:#ffcb58;background:#fff8e9;
 }
-@media(max-width:660px){
-  .decision-overlay:not([hidden]){padding:68px 7px 7px}
-  .decision-overlay .modal{width:min(330px,calc(100vw - 14px));max-height:34dvh;padding:12px}
-}
+@media(max-width:660px){.decision-overlay .modal{padding:12px}}
 
 .auction-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin:7px 0}
 .auction-summary[hidden]{display:none}
@@ -609,7 +605,6 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 .sound-row input[type="checkbox"]{accent-color:#1f579b;min-height:0;width:17px;height:17px}
 .sound-row input[type="range"]{width:100%;min-height:29px;accent-color:#1f579b;padding:0;background:none;border:0}
 
-.decision-overlay.purchase-reveal:not([hidden]){justify-content:center;align-items:center;padding:12px}
 .decision-overlay.purchase-reveal .modal{
   position:relative;isolation:isolate;width:min(465px,calc(100vw - 25px));max-height:70dvh;
   padding:17px 20px;text-align:center;background:#fff4d2;border:4px solid #ffbf49;
@@ -659,7 +654,6 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 }
 .panel-resize:focus-visible{outline:2px solid #9a4e30;outline-offset:3px}
 
-#decisionGrip[hidden]{display:none}
 
 .modal .takeover-option{display:flex;align-items:center;gap:8px;margin:2px 0 0;line-height:1.3}
 .modal .takeover-option input{width:17px;min-height:17px;height:17px;flex:none;accent-color:#205798}
@@ -807,13 +801,12 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 #gameLayout>.overlay{position:absolute;inset:0}
 #gameLayout>#overlay:not(.is-deed)>.modal{max-height:min(100%,700px)}
 #gameLayout>#overlay.is-deed:not(.deed-docked){padding:8px 10px 10px}
-#gameLayout>#decisionOverlay:not(.purchase-reveal){padding:8px 10px 10px}
 #gameLayout>#overlay.deed-docked{inset:7px 7px 7px auto}
 @media(max-width:839px){
   #gameLayout>#overlay.deed-docked{inset:auto 6px 6px}
 }
 @media(max-width:660px){
-  #gameLayout>#overlay.is-deed:not(.deed-docked),#gameLayout>#decisionOverlay:not(.purchase-reveal){padding:6px}
+  #gameLayout>#overlay.is-deed:not(.deed-docked){padding:6px}
 }
 
 .modal .takeover-safety{margin:7px 0 0;color:#365676;font-size:12px}
@@ -859,7 +852,8 @@ body:has(#overlay.is-deed:not([hidden])){overflow:hidden}
 
 .buy-shortage{flex-basis:100%;text-align:center;color:#783b34;font-size:13px;font-weight:750}
 </style></head><body><header><div><h1>DEMİRKAPIPOLY</h1><small>3D EMLAK TİCARETİ • BURSA</small></div><div class="topbuttons"><button id="settingsOpen" aria-expanded="false" aria-controls="gameSettings">Ayarlar</button><button id="saveBtn">Kaydet</button><button id="rulesBtn">Kurallar</button><button id="newBtn">Yeni oyun</button></div></header><main class="layout" id="gameLayout"><aside class="game-announcement" id="gameAnnouncement" role="status" aria-live="polite" aria-atomic="true" hidden><strong id="announcementTitle"></strong><span id="announcementDetail"></span></aside><div class="left" id="playArea"><div class="stage" id="stage"><div class="board" id="board"><div class="center"><div class="skyline"><i style="height:32px"></i><i style="height:54px"></i><i style="height:38px"></i><i style="height:77px"></i><i style="height:62px"></i><i style="height:46px"></i><i style="height:31px"></i></div><h2>DEMİRKAPIPOLY</h2><div class="subtitle">EMLAK • TİCARET • STRATEJİ</div><div class="decks"><div class="deck chance">✦ KADER</div><div class="deck finance">₺ KENİSEL</div></div></div><div class="piece-layer" id="pieces"></div><div class="dice-tray" id="cubes" aria-hidden="true" hidden></div></div><canvas id="meshScene" class="mesh-scene" aria-hidden="true"></canvas><div class="construction-notice" id="constructionNotice" role="status" aria-live="polite" hidden><strong id="constructionTitle"></strong><span id="constructionText"></span></div><div class="turn-cue" id="turnCue" hidden><strong class="turn-cue-grip" id="turnCueName" tabindex="0" title="Sıra göstergesini sürükle veya ok tuşlarını kullan"></strong><span id="turnCueAction"></span></div><div class="toast" id="toast" hidden></div><div class="camera"><button class="panel-toggle" id="gamePanelOpen" aria-expanded="false" aria-controls="gamePanel">Oyun Paneli</button><button id="camL">↶ Döndür</button><button id="camR" aria-label="Sağa döndür">↷</button><button id="camFlat" aria-pressed="true">3D görünüm</button><button id="camIn" aria-label="Yakınlaştır">+</button><button id="camOut" aria-label="Uzaklaştır">−</button><button id="camReset">Tahtayı göster</button><button id="camFollow" aria-pressed="true">Takip açık</button></div></div><div class="turn-progress" id="turnProgress" hidden><div id="turnProgressText"></div><button type="button" class="primary" id="landingContinue" hidden>Devam et</button></div><div class="dice-burst" id="diceBurst" role="status" aria-live="polite" aria-atomic="true" hidden><div class="dice-burst-card"><span>Zar sonucu</span><strong id="diceBurstTotal"></strong><div class="dice-double-note" id="diceDoubleNote" hidden><b id="diceDoubleTitle"></b><p id="diceDoubleMessage"></p></div></div></div><div class="roll-overlay" id="rollOverlay" hidden><strong id="rollPlayer"></strong><button type="button" class="primary" id="diceContinue" hidden>İlerlemeyi göster</button></div><div class="turn-prompt" id="turnPrompt" hidden><strong id="promptPlayer"></strong><button type="button" class="primary" id="promptRoll">Zar at</button></div><div class="section turn-panel" id="turnPanel"><div class="window-grip turn-panel-grip" id="turnPanelGrip" tabindex="0" aria-label="Sıra panelini taşı"></div><div class="turn-content"><div id="turntitle" class="turntitle">Yeni oyun</div><div class="dice"><span id="die1" class="die">⚀</span><span id="die2" class="die">⚀</span><span id="round" class="hint"></span></div><div id="message" class="message" role="status"></div><button id="resumeDeeds" class="resume-deeds" hidden>Tapuya dön</button><div id="cardpop"></div><p id="debtBalance" class="debt-balance" hidden></p><div id="gameOutcome" class="game-outcome" hidden></div><section class="auction-summary" id="auctionSummary" hidden aria-label="Açık artırma özeti"></section><section id="landingBrief" class="landing-brief" aria-label="Bölge bilgisi" hidden></section></div><div class="actions" id="actions"></div></div></div><aside class="game-panel" id="gamePanel" hidden><div class="panel-head window-topbar" id="gamePanelGrip" tabindex="0" aria-label="Oyun panelini taşı"><h2>Oyun paneli</h2><button id="gamePanelClose" aria-label="Oyun panelini kapat">×</button></div><div class="game-panel-actions"><button id="myDeeds" class="primary">Tapularım</button></div><div class="section"><h3>Oyuncular</h3><div id="players" class="players"></div></div><footer class="game-panel-footer"><div class="panel-resize" id="gamePanelResize" role="button" tabindex="0" aria-label="Oyun panelinin boyutunu değiştir" title="Sürükle veya ok tuşlarını kullan"></div></footer></aside><aside class="game-settings" id="gameSettings" hidden><div class="panel-head window-topbar" id="settingsGrip" tabindex="0" aria-label="Ayarları taşı"><h2>Ayarlar</h2><button id="settingsClose" aria-label="Ayarları kapat">×</button></div><fieldset class="settings-tempo"><legend>Oyun temposu</legend><div id="settingsPace" class="number-options lobby-pace"></div><p id="settingsPaceHint" hidden>Yeni tempo sonraki hamlede uygulanacak.</p></fieldset><fieldset class="sound-settings"><legend>Ses</legend><div class="sound-row"><label><input type="checkbox" id="musicEnabled"> Müzik</label><input id="musicVolume" type="range" min="0" max="100" aria-label="Müzik seviyesi"></div><div class="sound-row"><label><input type="checkbox" id="effectsEnabled"> Efektler</label><input id="effectsVolume" type="range" min="0" max="100" aria-label="Efekt seviyesi"></div></fieldset><details class="section history"><summary>Oyun geçmişi</summary><div class="log" id="log"></div></details></aside><aside class="trade-inbox" id="tradeInbox" hidden></aside><aside class="loan-inbox" id="loanInbox" aria-label="Borç talepleri" hidden></aside><aside class="seat-clock" id="seatClock" hidden><span id="seatClockText"></span></aside><div class="overlay" id="overlay"><div class="modal" id="modal" role="dialog" aria-modal="true" aria-label="Oyun penceresi"></div></div>
-<div class="overlay decision-overlay" id="decisionOverlay" hidden><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionText decisionAmount"><div id="decisionGrip" class="window-grip" tabindex="0" aria-label="Onay penceresini taşı"></div><h2 id="decisionTitle"></h2><p id="decisionText"></p><strong id="decisionAmount" hidden></strong><div class="actions"><button id="decisionCancel">Vazgeç</button><button id="decisionYes" class="primary">Eminim</button></div></section></div></main>
+</main>
+<div class="overlay decision-overlay" id="decisionOverlay" hidden><section class="modal" role="alertdialog" aria-modal="true" aria-labelledby="decisionTitle" aria-describedby="decisionText decisionAmount"><h2 id="decisionTitle"></h2><p id="decisionText"></p><strong id="decisionAmount" hidden></strong><div class="actions"><button id="decisionCancel">Vazgeç</button><button id="decisionYes" class="primary">Eminim</button></div></section></div>
 <script src="./scene-3d.js?v=hotel-impact"></script><script src="./sound-3d.js"></script>
 <script>
 'use strict';
@@ -2433,6 +2427,11 @@ function trade(draft=null){
 let onDecision=null,decisionReturnFocus=null,decisionContext=null;
 function decisionKey(){return S?[S.round,S.turn,S.phase,current().pos,S.auction?.at,S.auction?.bid].join(':'):''}
 function decisionIsCurrent(){return decisionContext?.game===S&&decisionContext?.key===decisionKey()&&!moving}
+function setDecisionOpen(open){
+  $('decisionOverlay').hidden=!open;
+  $('gameLayout').inert=open;
+  document.querySelector('body > header').inert=open;
+}
 function confirmDecision(title,text,action,{amount}={}){
   if(moving||!$('decisionOverlay').hidden)return;
   onDecision=action;
@@ -2445,16 +2444,7 @@ function confirmDecision(title,text,action,{amount}={}){
   price.hidden=!isPurchase;
   price.textContent=isPurchase?money(amount):'';
   overlay.classList.toggle('purchase-reveal',isPurchase);
-  overlay.hidden=false;
-  $('decisionTitle').parentElement.setAttribute('aria-modal','false');
-  $('decisionGrip').hidden=isPurchase;
-  const dialog=$('decisionTitle').parentElement;
-  dialog.style.removeProperty('translate');
-  if(!isPurchase){
-    const position=popupPositions.decision,x=position.x??0,y=position.y??0;
-    position.x=0;position.y=0;
-    movePopup(dialog,position,x,y);
-  }
+  setDecisionOpen(true);
   $('decisionCancel').focus({preventScroll:true});
 }
 function finishDecision(approved,restoreFocus=true){
@@ -2465,7 +2455,7 @@ function finishDecision(approved,restoreFocus=true){
   onDecision=null;
   decisionContext=null;
   decisionReturnFocus=null;
-  $('decisionOverlay').hidden=true;
+  setDecisionOpen(false);
   $('decisionOverlay').classList.remove('purchase-reveal');
   if(approved&&valid){action();if(!blockingOverlay())render()}
   else if(restoreFocus&&previous?.isConnected)previous.focus({preventScroll:true});
@@ -2880,7 +2870,7 @@ function renderSettingsPace(){
   $('settingsPaceHint').hidden=!moving;
 }
 
-const popupPositions={modal:{},trade:{},settings:{},decision:{},inbox:{},gamePanel:{},turnCue:{},turnDock:{},turnLanding:{}};
+const popupPositions={modal:{},trade:{},settings:{},inbox:{},gamePanel:{},turnCue:{},turnDock:{},turnLanding:{}};
 
 function movePopup(dialog,view,x,y){
   const rect=dialog.getBoundingClientRect();
@@ -3125,8 +3115,9 @@ function renderAuction(actions){
   balance.className='auction-balance';
   const submit=button('Teklif ver',()=>{
     if(!input.reportValidity())return;
-    auctionAct(+input.value);
-  },{kind:'primary'});
+    const offer=+input.value;
+    confirmDecision('Teklif verilsin mi?',B[auction.i].name+' için '+money(offer)+' teklif edeceksin. Kazanırsan '+money(bidder.cash-offer)+' paran kalacak.',()=>auctionAct(offer));
+  },{kind:'primary',render:false});
   function showBalance(){
     const value=+input.value;
     const valid=input.value!==''&&Number.isSafeInteger(value)&&value>=min&&value<=bidder.cash;
@@ -3147,7 +3138,7 @@ function renderAuction(actions){
     }));
   }
   entry.append(balance);
-  actions.append(entry,submit,button('Çekil',()=>auctionAct(null)));
+  actions.append(entry,submit,button('Çekil',()=>confirmDecision('Açık artırmadan çekilmek istiyor musun?','Bu tapu için tekrar teklif veremeyeceksin.',()=>auctionAct(null)),{render:false}));
   showBalance();
 }
 
@@ -3195,7 +3186,6 @@ bindPopupDrag($('gamePanel'),$('gamePanelGrip'),popupPositions.gamePanel);
 initGamePanelResize();
 bindPopupDrag($('turnCue'),$('turnCueName'),popupPositions.turnCue);
 bindPopupDrag($('turnPanel'),$('turnPanelGrip'),turnPanelPosition);
-bindPopupDrag($('decisionTitle').parentElement,$('decisionGrip'),popupPositions.decision);
 
 window.addEventListener('resize',()=>{
   if(activeDeed)moveDeedWindow(activeDeed,activeDeed.x,activeDeed.y);
