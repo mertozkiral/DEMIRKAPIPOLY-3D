@@ -156,16 +156,20 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
 
 
   function propertyBuilding(x,y,isHotel,growth,drop=0){
-    const h=(isHotel?16:9)*growth;
-    const width=isHotel?13:4.15,depth=isHotel?7:4.1;
+    const h=(isHotel?23:9)*growth;
+    const width=isHotel?15:4.15,depth=isHotel?8:4.1;
     shadow(x+.5,y+1,.18,width*1.2,depth*1.35);
     draw(block,at(x,y,h/2+drop),[width,depth,Math.max(.2,h/2)],isHotel?'#ef9260':'#8ac6a9');
     draw(block,at(x,y,h+.6+drop),[width+.8,depth+.9,isHotel?2.8:1.7],isHotel?'#993e53':'#2e6f73');
-    if(growth>.56){
-      draw(block,at(x,y+depth+.12,h*.42+drop),[isHotel?1.7:1,.45,isHotel?2.2:1.5],'#ffe496',true);
-      if(isHotel)for(const offset of [-7,7]){
-        draw(block,at(x+offset,y+depth+.12,h*.62+drop),[1.4,.45,1.55],'#ffe496',true);
+    if(isHotel){
+      draw(block,at(x,y,h+2.9+drop),[width*.73,depth*.74,.75],'#f2bb58');
+      for(const offset of [-10,0,10]){
+        draw(block,at(x+offset,y+depth+.38,h*.66+drop),[1.5,.5,2.3],'#fff0af',true);
       }
+    }
+    if(!isHotel&&growth>.56){
+      draw(block,at(x,y+depth+.12,h*.42+drop),[isHotel?1.7:1,.45,isHotel?2.2:1.5],'#ffe496',true);
+
     }
   }
 
@@ -201,23 +205,35 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
       const t=event&&event.level===property.h?(event.reduced?.65:Math.min(1,Math.max(0,(time-event.at)/event.duration))):1;
       const progress=event?.reduced?1:Math.max(.06,Math.min(1,(t-.23)/.44));
       const completed=1-(1-progress)**2;
-  const drop=isHotel&&!event?.reduced&&t<.49?91*(1-(t/.49)**2):0;
+      if(isHotel){
+        const elapsed=event&&!event.reduced?Math.max(0,time-event.at):Infinity;
+        const impactAt=event?.impactAt??1050;
+        const drop=elapsed<impactAt?250*(1-(elapsed/impactAt)**2.75):0;
+        const settle=elapsed-impactAt;
+        const height=settle>=0&&settle<440?1-.14*Math.cos(settle/44)*Math.exp(-settle/128):1;
+        propertyBuilding(tileX+20,tileY+52,true,height,drop);
+        if(settle>=0&&settle<970){
+          const life=settle/970;
+          for(let shard=0;shard<14;shard++){
+            const angle=shard*2.39996323;
+            const radius=6+life*(36+(shard*11)%41);
+            const z=2+4*life*(1-life)*(11+shard%5*5);
+            const x=tileX+20+Math.cos(angle)*radius,y=tileY+52+Math.sin(angle)*radius*.72;
+            const size=(1.5+shard%4*.44)*(1-life*.65);
+            const pose=at(x,y,z).rotateAxisAngle(1,1,0,shard*19+life*290);
+            draw(block,pose,[size,size*.78,size*.62],shard%4===0?'#ffcf67':'#a17b64');
+          }
+        }
+        return;
+      }
       for(let j=0;j<count;j++){
-        propertyBuilding(tileX+(isHotel?20:9+j*10),tileY+52,isHotel,isHotel?1:j===count-1?completed:1,drop);
+        propertyBuilding(tileX+9+j*10,tileY+52,false,j===count-1?completed:1);
       }
       if(t>=1)return;
       const approach=Math.max(0,1-Math.min(t/.22,(1-t)/.23));
       worker(tileX+7-7*approach,tileY+62-10*approach,t,1,0);
       worker(tileX+46+8*approach,tileY+62-12*approach,t,-1,1);
-      if(isHotel&&t>.47&&t<.84&&!event?.reduced){
-        const life=(t-.47)/.37;
-        for(let puff=0;puff<7;puff++){
-          const angle=puff*2*Math.PI/7,radius=8+life*20;
-          const x=tileX+20+Math.cos(angle)*radius,y=tileY+52+Math.sin(angle)*radius*.55;
-          draw(block,at(x,y,2+life*5),[3+2*life,2+life*2,2+life*2],[1,.83,.56,(1-life)*.62],true);
-        }
-      }
-      if(!isHotel&&t>.24&&t<.74){
+      if(t>.24&&t<.74){
         const fade=Math.sin((t-.24)/.5*Math.PI);
         for(let spark=0;spark<3;spark++){
           const x=tileX+12+spark*10+(t-.24)*11*(spark-1);

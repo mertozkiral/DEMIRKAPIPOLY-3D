@@ -138,8 +138,17 @@ window.createToyAudio = function createToyAudio(initial={}) {
     tone(effectsBus,time,330,330,.22,.073,'sine',.029);
     tone(effectsBus,time+.105,392,392,.28,.068,'sine',.032);
   }
+  function hotel(delay=0){
+    if(!canPlay())return;
+    const now=context.currentTime,impact=now+delay;
+    if(delay>.2)tone(effectsBus,now+.04,210,102,delay*.89,.09,'sine',.22);
+    tone(effectsBus,impact,118,46,.44,.23);
+    cloth(effectsBus,impact+.014,370,.25,.19);
+    tone(effectsBus,impact+.2,196,196,.44,.075,'sine',.08);
+    tone(effectsBus,impact+.29,294,294,.55,.063,'sine',.09);
+  }
   document.addEventListener('pointerdown',unlock,{passive:true,capture:true});
   document.addEventListener('keydown',unlock,{capture:true});
   document.addEventListener('visibilitychange',sync);
-  return {unlock,configure,setPlaying,dice,hop,reveal};
+  return {unlock,configure,setPlaying,dice,hop,reveal,hotel};
 };
