@@ -35,7 +35,7 @@ window.createGameScene = function createGameScene(options) {
   start();
 };
 
-function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, colors, players, angles, properties=()=>[], loc, workFor=()=>null}) {
+function makeScene({canvas, stage, board, pieces, dice, faceLayout, colors, players, activePlayer, properties=()=>[], loc, workFor=()=>null}) {
   const gl = canvas.getContext('webgl', {alpha: true, antialias: true});
   if (!gl || !window.DOMMatrix) return null;
   const vertex = `
@@ -100,6 +100,14 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
   }
   const block = mesh(roundedBlock());
   const disk = mesh(roundDisk());
+  const pawn = mesh(pawnSurface([
+    [9.2,0],[10.4,.8],[10.8,1.8],[10.8,3.4],[10.1,4.7],[8.8,5.5],
+    [8,7],[7.2,9.2],[6.2,11.1],[5.1,13.2],[4.1,15.5],[3.7,17.6],
+    [4,18.7],[4.8,19.1],[5,20.2],[4.7,21.2],[3.4,21.7],
+    [4.8,22.6],[5.9,24],[6.5,25.9],[6.5,27.8],[5.9,29.8],
+    [4.6,31.5],[2.7,32.6],[0,33]
+  ]));
+  const baseBand = mesh(pawnSurface([[10.8,2.1],[10.9,2.35],[10.9,2.8],[10.8,3.05]]));
   let currentMesh;
   const materialCache = new Map();
 
@@ -266,7 +274,6 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
     }
 
     renderProperties(time);
-    const {angle,tilt}=angles();
     players().forEach((player,index)=>{
       const piece=pieces.children[index];
       if(!piece||piece.hidden||player.out)return;
@@ -275,14 +282,12 @@ function makeScene({canvas, stage, board, pieces, dice, modelFor, faceLayout, co
       const x=translate[0]-board.offsetWidth/2+8.5;
       const y=translate[1]-board.offsetHeight/2+11;
       const hop=piece.querySelector('.piece-hop');
-      shadow(x,y,1,13,9);
-      draw(block,at(x,y,3),[10,8,3],colors[index]);
-      const root=at(x,y,11).multiply(hop?matrixOf(hop):new DOMMatrix())
-        .rotateAxisAngle(0,0,1,-angle).rotateAxisAngle(1,0,0,-tilt-24).rotateAxisAngle(0,1,0,-23-angle)
-        .scale(1.22);
-      for(const [px,py,pz,w,h,d,color] of modelFor(index).parts){
-        draw(block,root.translate(px+w/2,py+h/2,pz),[w/2,h/2,d/2],color);
-      }
+      shadow(x,y,1,13,10);
+      if(index===activePlayer())draw(disk,at(x,y,1.2),[12.7,12.7,1],'#ffe79c',true);
+      const root=at(x,y,1.5).multiply(hop?matrixOf(hop):new DOMMatrix());
+      const color=material(colors[index]);
+      draw(pawn,root,[1,1,1],color);
+      draw(baseBand,root,[1,1,1],[...color.slice(0,3).map(value=>value*.63+.37),1]);
     });
 
     if(!dice.hidden)for(const cube of dice.children){
@@ -323,4 +328,26 @@ function roundDisk() {
     data.push(0,0,0,0,0,1, Math.cos(start),Math.sin(start),0,0,0,1, Math.cos(end),Math.sin(end),0,0,0,1);
   }
   return data;
+}
+
+function pawnSurface(profile) {
+  const vertices=[], segments=24;
+  const rings=profile.map(([radius,height],row)=>{
+    const [beforeRadius,beforeHeight]=profile[Math.max(0,row-1)];
+    const [afterRadius,afterHeight]=profile[Math.min(profile.length-1,row+1)];
+    const dr=afterRadius-beforeRadius,dz=afterHeight-beforeHeight,length=Math.hypot(dr,dz);
+    return Array.from({length:segments},(_,segment)=>{
+      const angle=segment*2*Math.PI/segments;
+      const x=Math.cos(angle),y=Math.sin(angle);
+      return [radius*x,radius*y,height,x*dz/length,y*dz/length,-dr/length];
+    });
+  });
+  for(let row=0;row<rings.length-1;row++){
+    for(let segment=0;segment<segments;segment++){
+      const next=(segment+1)%segments;
+      const a=rings[row][segment],b=rings[row][next],c=rings[row+1][segment],d=rings[row+1][next];
+      vertices.push(...a,...b,...c,...b,...d,...c);
+    }
+  }
+  return vertices;
 }
