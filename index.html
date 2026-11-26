@@ -3581,10 +3581,16 @@ function renderAuction(actions){
     const offer=+input.value;
     confirmDecision('Teklif verilsin mi?',B[auction.i].name+' için '+money(offer)+' teklif edeceksin. Kazanırsan '+money(bidder.cash-offer)+' paran kalacak.',()=>auctionAct(offer));
   },{kind:'primary',render:false});
+  const increments=[];
+  function draftBase(){
+    const value=Number(input.value);
+    return Number.isSafeInteger(value)&&value>=min?value:min;
+  }
   function showBalance(){
     const value=+input.value;
     const valid=input.value!==''&&Number.isSafeInteger(value)&&value>=min&&value<=bidder.cash;
     submit.disabled=!valid;
+    for(const [delta,control] of increments)control.disabled=draftBase()+delta>bidder.cash;
     balance.textContent=valid?'Kazanırsan '+money(bidder.cash-value)+' kalır.':bidder.cash<min?'Nakit en düşük teklife yetmiyor.':'En az '+money(min)+' teklif verilebilir.';
   }
   input.oninput=()=>{auctionDraft.value=input.value;showBalance()};
@@ -3596,9 +3602,13 @@ function renderAuction(actions){
   };
   entry.append(input);
   for(const delta of [1,10,50]){
-    entry.append(button('+'+delta+' ₺',()=>{input.value=min-1+delta;auctionDraft.value=input.value;showBalance()},{
-      disabled:min-1+delta>bidder.cash,render:false
-    }));
+    const control=button('+'+delta+' ₺',()=>{
+      input.value=String(draftBase()+delta);
+      auctionDraft.value=input.value;
+      showBalance();
+    },{render:false});
+    increments.push([delta,control]);
+    entry.append(control);
   }
   entry.append(balance);
   actions.append(entry,submit,button('Çekil',()=>confirmDecision('Açık artırmadan çekilmek istiyor musun?','Bu tapu için tekrar teklif veremeyeceksin.',()=>auctionAct(null)),{render:false}));
